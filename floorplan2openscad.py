@@ -498,13 +498,14 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
                 # Section A: Parameters (Global Variables)
                 f.write(f"// Generated from SVG floor plan \"{self.basename}.svg\" at {time.ctime()}\n")
                 f.write(f"// Base Z-Scale: {scale_desc}\n\n")
-                f.write(f"WALL_HEIGHT      = {wall_height:.2f};  // Standard ceiling height (2.40m)\n")
-                f.write(f"DOOR_HEIGHT      = {door_height:.2f};  // Standard door clearance (2.00m)\n")
-                f.write(f"WINDOW_HEADER    = {window_header:.2f};  // Top of the window frame (2.10m)\n")
-                f.write(f"WINDOW_SILL      = {window_sill:.2f};  // Standard window sill height (0.90m)\n")
-                f.write(f"FLOOR_THICKNESS  = {floor_thickness:.2f};  // Slab thickness below Z=0 (0.15m)\n")
-                f.write(f"BALCONY_HEIGHT   = {balcony_height:.2f};  // Height for balcony/varanda walls (1.10m)\n")
-                f.write(f"FRAME_WIDTH      = {frame_width:.2f};  // Width of door and window frames\n\n")
+                f.write(f"BASE_Z_SCALE = 80;\n")
+                f.write(f"WALL_HEIGHT      = {wall_height:.2f}/80 * BASE_Z_SCALE;  // Standard ceiling height (2.40m)\n")
+                f.write(f"DOOR_HEIGHT      = {door_height:.2f}/80 * BASE_Z_SCALE;  // Standard door clearance (2.00m)\n")
+                f.write(f"WINDOW_HEADER    = {window_header:.2f}/80 * BASE_Z_SCALE;  // Top of the window frame (2.10m)\n")
+                f.write(f"WINDOW_SILL      = {window_sill:.2f}/80 * BASE_Z_SCALE;  // Standard window sill height (0.90m)\n")
+                f.write(f"FLOOR_THICKNESS  = {floor_thickness:.2f}/80 * BASE_Z_SCALE;  // Slab thickness below Z=0 (0.15m)\n")
+                f.write(f"BALCONY_HEIGHT   = {balcony_height:.2f}/80 * BASE_Z_SCALE;  // Height for balcony/varanda walls (1.10m)\n")
+                f.write(f"FRAME_WIDTH      = {frame_width:.2f}/80 * BASE_Z_SCALE;  // Width of door and window frames\n\n")
                 f.write("RENDER_DOORS     = true;\n")
                 f.write("RENDER_WINDOWS   = true;\n")
                 f.write("RENDER_FLOORS    = true;\n")
@@ -517,7 +518,7 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
                 # Section B: Semantic Modules
                 f.write("/* --- Semantic Modules --- */\n\n")
                 f.write("""module wall(points, paths=[], h=WALL_HEIGHT) {
-    color("ghostwhite")
+    color([0.9, 0.9, 0.92])
     linear_extrude(height=h, convexity=10) {
         if (len(paths) > 0) {
             polygon(points, paths);
@@ -528,7 +529,7 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
 }
 
 module wall_outer(points, paths=[], h=WALL_HEIGHT) {
-    color("ghostwhite")
+    color([0.9, 0.9, 0.92])
     linear_extrude(height=h, convexity=10) {
         if (len(paths) > 0) {
             polygon(points, paths);
@@ -539,7 +540,7 @@ module wall_outer(points, paths=[], h=WALL_HEIGHT) {
 }
 
 module wall_inner(points, paths=[], h=WALL_HEIGHT) {
-    color("whitesmoke")
+    color([0.9, 0.9, 0.92])
     linear_extrude(height=h, convexity=10) {
         if (len(paths) > 0) {
             polygon(points, paths);
@@ -550,7 +551,7 @@ module wall_inner(points, paths=[], h=WALL_HEIGHT) {
 }
 
 module wall_balcony(points, paths=[], h=BALCONY_HEIGHT) {
-    color("ghostwhite")
+    color([0.9, 0.9, 0.92])
     linear_extrude(height=h, convexity=10) {
         if (len(paths) > 0) {
             polygon(points, paths);
@@ -562,7 +563,7 @@ module wall_balcony(points, paths=[], h=BALCONY_HEIGHT) {
 
 module floor_slab(points, paths=[], h=FLOOR_THICKNESS) {
     if (RENDER_FLOORS) {
-        color("lightgray")
+        color([0.85, 0.8, 0.75]) // Light wood/tile base
         translate([0, 0, -h])
         linear_extrude(height=h, convexity=10) {
             if (len(paths) > 0) {
@@ -576,7 +577,7 @@ module floor_slab(points, paths=[], h=FLOOR_THICKNESS) {
 
 module door_wood(points, paths=[]) {
     // Lintel wall above door
-    color("ghostwhite")
+    color([0.9, 0.9, 0.92])
     translate([0, 0, DOOR_HEIGHT])
     linear_extrude(height=WALL_HEIGHT - DOOR_HEIGHT, convexity=10) {
         if (len(paths) > 0) {
@@ -586,7 +587,7 @@ module door_wood(points, paths=[]) {
         }
     }
     if (RENDER_DOORS) {
-        color("sienna")
+        color([0.4, 0.25, 0.1]) // Wood tone
         linear_extrude(height=DOOR_HEIGHT, convexity=10) {
             if (len(paths) > 0) {
                 polygon(points, paths);
@@ -599,7 +600,7 @@ module door_wood(points, paths=[]) {
 
 module door_glass(points, paths=[]) {
     // Lintel wall above door
-    color("ghostwhite")
+    color([0.9, 0.9, 0.92])
     translate([0, 0, DOOR_HEIGHT])
     linear_extrude(height=WALL_HEIGHT - DOOR_HEIGHT, convexity=10) {
         if (len(paths) > 0) {
@@ -610,7 +611,7 @@ module door_glass(points, paths=[]) {
     }
     if (RENDER_DOORS) {
         // Wood frame
-        color("sienna")
+        color([0.4, 0.25, 0.1]) // Wood tone
         linear_extrude(height=DOOR_HEIGHT, convexity=10) {
             difference() {
                 if (len(paths) > 0) {
@@ -628,7 +629,7 @@ module door_glass(points, paths=[]) {
             }
         }
         // Glass panel
-        color("skyblue", 0.5)
+        color([0.5, 0.8, 1.0, 0.3]) // Translucent glass
         linear_extrude(height=DOOR_HEIGHT, convexity=10) {
             offset(delta = -FRAME_WIDTH) {
                 if (len(paths) > 0) {
@@ -643,7 +644,7 @@ module door_glass(points, paths=[]) {
 
 module sliding_glass_door(points, paths=[]) {
     // Lintel wall above door
-    color("ghostwhite")
+    color([0.9, 0.9, 0.92])
     translate([0, 0, DOOR_HEIGHT])
     linear_extrude(height=WALL_HEIGHT - DOOR_HEIGHT, convexity=10) {
         if (len(paths) > 0) {
@@ -672,7 +673,7 @@ module sliding_glass_door(points, paths=[]) {
             }
         }
         // Glass panel
-        color("skyblue", 0.4)
+        color([0.5, 0.8, 1.0, 0.3]) // Translucent glass
         linear_extrude(height=DOOR_HEIGHT, convexity=10) {
             offset(delta = -FRAME_WIDTH / 2.0) {
                 if (len(paths) > 0) {
@@ -687,7 +688,7 @@ module sliding_glass_door(points, paths=[]) {
 
 module window_standard(points, paths=[]) {
     // Sill wall below window
-    color("ghostwhite")
+    color([0.9, 0.9, 0.92])
     linear_extrude(height=WINDOW_SILL, convexity=10) {
         if (len(paths) > 0) {
             polygon(points, paths);
@@ -696,7 +697,7 @@ module window_standard(points, paths=[]) {
         }
     }
     // Lintel wall above window
-    color("ghostwhite")
+    color([0.9, 0.9, 0.92])
     translate([0, 0, WINDOW_HEADER])
     linear_extrude(height=WALL_HEIGHT - WINDOW_HEADER, convexity=10) {
         if (len(paths) > 0) {
@@ -707,7 +708,7 @@ module window_standard(points, paths=[]) {
     }
     if (RENDER_WINDOWS) {
         // Window frame
-        color("darkslategrey")
+        color([0.75, 0.78, 0.80]) // Light aluminium frame
         translate([0, 0, WINDOW_SILL])
         linear_extrude(height=WINDOW_HEADER - WINDOW_SILL, convexity=10) {
             difference() {
@@ -726,15 +727,13 @@ module window_standard(points, paths=[]) {
             }
         }
         // Glass pane
-        color("skyblue", 0.5)
+        color([0.5, 0.8, 1.0, 0.3]) // Translucent glass
         translate([0, 0, WINDOW_SILL])
         linear_extrude(height=WINDOW_HEADER - WINDOW_SILL, convexity=10) {
-            offset(delta = -FRAME_WIDTH) {
-                if (len(paths) > 0) {
-                    polygon(points, paths);
-                } else {
-                    polygon(points);
-                }
+            if (len(paths) > 0) {
+                polygon(points, paths);
+            } else {
+                polygon(points);
             }
         }
     }

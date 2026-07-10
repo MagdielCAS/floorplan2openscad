@@ -4,7 +4,7 @@
   <id>org.inkscape.floorplan2openscad</id>
   <dependency type="extension">org.inkscape.output.svg.inkscape</dependency>
 
-  <param name="fname" type="string" gui-text="Output File">{NAME}.scad</param>
+  <param name="fname" type="string" gui-text="Output File">~/Downloads/{NAME}.scad</param>
   <_param name="fname_help" type="description">Use '{NAME}.scad' to match the SVG filename.</_param>
 
   <param name="base_scale" type="optiongroup" appearance="minimal" gui-text="Base Scale (1 unit = )">

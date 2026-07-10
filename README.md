@@ -1,205 +1,74 @@
 # floorplan2openscad
 
-> Convert SVG floor plans into 3D OpenSCAD models using prefixed layer names to identify architectural elements such as walls, doors, windows, stairs, and more.
+An Inkscape extension that converts 2D architectural SVG floor plans into fully parametric 3D OpenSCAD models.
 
----
-
-## Overview
-
-**floorplan2openscad** is a tool that takes an SVG floor plan drawn in [Inkscape](https://inkscape.org/) and converts it into a parametric [OpenSCAD](https://openscad.org/) 3D model.  It is heavily inspired by [inkscape-paths2openscad](https://github.com/fablabnbg/inkscape-paths2openscad) but is purpose-built for architectural floor plans.  Instead of treating every path identically, it reads **prefixed layer names** in your SVG to understand what each shape represents — walls, doors, windows, stairs, columns, and more — and generates a properly structured, ready-to-render `.scad` file.
+Unlike general path-to-OpenSCAD converters, this extension is **semantic**. It reads your layer names (or individual object IDs/prefixes) in Inkscape, extracts the coordinates, and wraps them in custom procedural OpenSCAD modules representing architectural features.
 
 ---
 
 ## Features
 
-- **Layer-driven architecture** — name your Inkscape layers with a recognised prefix and the tool will automatically assign the correct 3D behaviour to every path in that layer.
-- **Walls** — closed paths are extruded to a configurable wall height.
-- **Doors** — arcs and rectangles in a door layer are turned into door-shaped cutouts and optionally a swinging door leaf.
-- **Windows** — paths in a window layer produce horizontal slot cutouts at the correct sill and head heights.
-- **Stairs** — stepped extrusions follow a stair-tread path.
-- **Columns / pillars** — circular or rectangular shapes are extruded as solid columns.
-- **Furniture (optional)** — simple footprint shapes can be extruded at a low height for visualisation.
-- **Parametric output** — wall height, slab thickness, door height, window sill/head heights and more are exposed as OpenSCAD variables at the top of the output file so you can tweak them without re-running the converter.
-- **Clean, readable `.scad`** — each layer group becomes a named OpenSCAD `module`, making it easy to include only the parts you need.
+- **Semantic Prefix Identification**: Automatically matches paths by their layer name or object ID prefix and maps them to specialized OpenSCAD modules.
+- **Parametric Controls**: Custom dimensions (wall height, door clearance, window sill/header heights, slab thickness, balcony wall heights, and frame widths) are exposed as global variables at the top of the `.scad` file.
+- **Base Scale Conversions**: Tweak the output base scale dropdown in Inkscape to match your drafting units (e.g. 1 unit = 3cm, 1cm, 1mm, or 1m).
+- **Hole and Subpath Support**: Correctly renders nested paths (such as walls with inner cutouts or donut slabs) as OpenSCAD polygons with hole indexes.
+- **Comprehensive Transform Support**: Parses paths, rectangles, circles, ellipses, lines, polylines, and polygons, automatically applying cumulative group transforms.
 
 ---
 
-## Layer Naming Conventions
+## Semantic Categories & Prefix Rules
 
-Rename your Inkscape layers so that their names start with one of the following prefixes (case-insensitive).  Everything after the prefix is treated as a free-form label.
+Name your Inkscape layers (or individual object IDs) with one of the following prefixes (case-insensitive):
 
-| Prefix | Element | Default behaviour |
-|---|---|---|
-| `wall:` | Load-bearing or partition wall | Extruded to `wall_height` |
-| `door:` | Door opening + leaf | Cutout in the wall layer + optional swinging leaf |
-| `window:` | Window opening | Horizontal slot cut between `window_sill` and `window_head` heights |
-| `stair:` | Stair flight | Stepped extrusion following the path direction |
-| `column:` | Column / pillar | Solid extrusion to `column_height` |
-| `slab:` | Floor or ceiling slab | Extruded to `slab_thickness` (placed at z = 0 or z = `wall_height`) |
-| `furniture:` | Furniture footprint | Flat extrusion to `furniture_height` for visualisation |
-| `ignore:` | Annotation / dimension | Skipped entirely |
+| Prefix | Element Type | OpenSCAD Module | Description |
+|---|---|---|---|
+| `floor_` | Floor Slabs | `floor_slab(points)` | Slab extruded downwards below Z=0 |
+| `wall_outer_` | Exterior Walls | `wall_outer(points)` | Full-height exterior structural walls |
+| `wall_inner_` | Interior Walls | `wall_inner(points)` | Full-height interior walls |
+| `wall_balcony_` | Balcony Walls | `wall_balcony(points)` | Half-height masonry walls for balconies |
+| `door_wood_` | Wooden Doors | `door_wood(points)` | Standard door (wood leaf + lintel above) |
+| `door_glass_` | Glass Doors | `door_glass(points)` | Wood frame + translucent glass panel |
+| `sliding_door_` | Sliding Doors | `sliding_glass_door(points)` | Minimal dark frames + large sliding glass panes |
+| `window_standard_` | Standard Windows | `window_standard(points)` | Wall sill + frame + glass pane + lintel |
+| `wardrobe_` | Built-in Closets | `wardrobe(points)` | Floor-to-ceiling closet block |
 
-> **Tip:** you can have multiple layers with the same prefix, e.g. `wall: exterior` and `wall: interior`.  All paths in both layers will be treated as walls.
-
-### Example layer setup in Inkscape
-
-```
-wall: exterior
-wall: interior
-door: ground floor
-window: ground floor
-stair: main staircase
-column: structural
-slab: ground floor
-furniture: kitchen (optional)
-ignore: dimensions
-```
+> **Warning:** If an object or layer does not match any known prefix, it falls back to a standard `wall` extrusion, and a warning is printed in the Inkscape interface.
 
 ---
 
-## Requirements
+## Base Scale Configuration
 
-- [Python](https://www.python.org/) 3.9 or newer
-- [Inkscape](https://inkscape.org/) (for drawing / exporting the floor plan SVG; not required at conversion time)
-- [OpenSCAD](https://openscad.org/) (to render the generated `.scad` file)
-- Python dependencies listed in `requirements.txt`
+The dropdown in the Inkscape extension interface adjusts the unit scale and parameters:
+
+- **3 cm** (Architectural 1:100 draft): 1 unit = 3cm. Ceiling height is `80.0` units.
+- **1 cm**: 1 unit = 1cm. Ceiling height is `240.0` units.
+- **1 mm**: 1 unit = 1mm. Ceiling height is `2400.0` units.
+- **1 m**: 1 unit = 1m. Ceiling height is `2.4` units.
 
 ---
 
 ## Installation
 
-```bash
-git clone https://github.com/MagdielCAS/floorplan2openscad.git
-cd floorplan2openscad
-pip install -r requirements.txt
-```
+1. Clone or download this repository.
+2. Move the `floorplan2openscad` folder into your Inkscape extensions folder:
+   - **Linux**: `~/.config/inkscape/extensions/`
+   - **macOS**: `~/Library/Application Support/org.inkscape.Inkscape/config/inkscape/extensions/`
+   - **Windows**: `%APPDATA%\inkscape\extensions\`
+3. Restart Inkscape. The extension will appear under **Extensions → Generate from Path → Semantic Floorplan to OpenSCAD**.
 
 ---
 
-## Quick Start
+## How to Use
 
-1. **Draw your floor plan** in Inkscape.
-2. **Name your layers** using the prefixes described above (e.g. `wall: exterior`).
-3. **Save as Plain SVG** (`File → Save a copy → Plain SVG`).
-4. **Run the converter:**
-
-   ```bash
-   python floorplan2openscad.py floorplan.svg -o floorplan.scad
-   ```
-
-5. **Open the result** in OpenSCAD:
-
-   ```bash
-   openscad floorplan.scad
-   ```
-
----
-
-## Command-Line Options
-
-```
-usage: floorplan2openscad.py [-h] [-o OUTPUT] [--wall-height WALL_HEIGHT]
-                             [--slab-thickness SLAB_THICKNESS]
-                             [--door-height DOOR_HEIGHT]
-                             [--window-sill WINDOW_SILL]
-                             [--window-head WINDOW_HEAD]
-                             [--column-height COLUMN_HEIGHT]
-                             [--furniture-height FURNITURE_HEIGHT]
-                             [--scale SCALE] [--no-furniture]
-                             [--list-layers]
-                             input
-
-positional arguments:
-  input                 Path to the input SVG floor plan
-
-options:
-  -h, --help            Show this help message and exit
-  -o OUTPUT             Output .scad file (default: <input>.scad)
-  --wall-height         Wall height in mm (default: 2700)
-  --slab-thickness      Floor/ceiling slab thickness in mm (default: 200)
-  --door-height         Door opening height in mm (default: 2100)
-  --window-sill         Window sill height in mm (default: 900)
-  --window-head         Window head height in mm (default: 2100)
-  --column-height       Column height in mm (default: 2700)
-  --furniture-height    Furniture extrusion height in mm (default: 50)
-  --scale               Scale factor applied to SVG coordinates (default: 1.0)
-  --no-furniture        Skip furniture layers
-  --list-layers         Print detected layers and their assigned types, then exit
-```
-
----
-
-## Output Structure
-
-The generated `.scad` file is organised as follows:
-
-```openscad
-// floorplan2openscad — generated from floorplan.svg
-// https://github.com/MagdielCAS/floorplan2openscad
-
-/* --- Parameters --- */
-wall_height      = 2700;
-slab_thickness   = 200;
-door_height      = 2100;
-window_sill      =  900;
-window_head      = 2100;
-column_height    = 2700;
-furniture_height =   50;
-
-/* --- Modules --- */
-module walls()      { ... }
-module doors()      { ... }
-module windows()    { ... }
-module stairs()     { ... }
-module columns()    { ... }
-module slabs()      { ... }
-module furniture()  { ... }
-
-/* --- Assembly --- */
-walls();
-difference() {
-    walls();
-    doors();
-    windows();
-}
-stairs();
-columns();
-slabs();
-furniture();
-```
-
----
-
-## How It Works
-
-1. **Parse SVG** — the tool uses Python's `xml.etree.ElementTree` to walk the SVG document tree, collecting all `<g>` (group/layer) elements and their children.
-2. **Identify layers** — each layer's `inkscape:label` attribute is matched against the prefix table.
-3. **Extract paths** — SVG `<path>`, `<rect>`, `<circle>`, and `<ellipse>` elements are converted to 2D polygon coordinates using a path-parsing library.
-4. **Apply transforms** — any SVG `transform` attributes (translate, rotate, scale, matrix) are applied so coordinates are in a consistent world space.
-5. **Generate OpenSCAD** — for each layer type the appropriate OpenSCAD primitive (`linear_extrude`, `difference`, etc.) is written out together with the 2D polygon data.
-
----
-
-## Contributing
-
-Contributions are welcome!  Please open an issue or pull request on [GitHub](https://github.com/MagdielCAS/floorplan2openscad).
-
-1. Fork the repository.
-2. Create a feature branch: `git checkout -b feature/my-new-feature`
-3. Commit your changes: `git commit -m "Add my new feature"`
-4. Push to the branch: `git push origin feature/my-new-feature`
-5. Open a pull request.
-
----
-
-## Acknowledgements
-
-- [inkscape-paths2openscad](https://github.com/fablabnbg/inkscape-paths2openscad) by [FabLab Nürnberg](https://fablab.fau.de/) — the original inspiration for converting SVG paths to OpenSCAD.
-- [Inkscape](https://inkscape.org/) — open-source vector graphics editor used for drawing floor plans.
-- [OpenSCAD](https://openscad.org/) — the scriptable 3D CAD modeller used as the output target.
+1. Draw your floor plan elements in Inkscape.
+2. Group or layer your shapes and label the layers using one of the prefixes above (e.g., a layer named `wall_outer_ground`).
+3. Convert all shapes to paths: **Path → Object to Path** (Ctrl+Shift+C).
+4. Run the extension: Go to **Extensions → Generate from Path → Semantic Floorplan to OpenSCAD**.
+5. Select your output `.scad` filename and base scale, then click **Apply**.
+6. Open the generated file in **OpenSCAD** to customize, preview, and export your 3D architectural model.
 
 ---
 
 ## License
 
-This project is released under the [MIT License](LICENSE).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

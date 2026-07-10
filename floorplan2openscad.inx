@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+  <_name>Semantic Floorplan to OpenSCAD</_name>
+  <id>org.inkscape.floorplan2openscad</id>
+  <dependency type="extension">org.inkscape.output.svg.inkscape</dependency>
+
+  <param name="fname" type="string" gui-text="Output File">{NAME}.scad</param>
+  <_param name="fname_help" type="description">Use '{NAME}.scad' to match the SVG filename.</_param>
+
+  <param name="base_scale" type="optiongroup" appearance="minimal" gui-text="Base Scale (1 unit = )">
+    <option value="3cm">3 cm (Architectural: 80 units = 2.40m ceiling)</option>
+    <option value="1cm">1 cm (240 units = 2.40m ceiling)</option>
+    <option value="1mm">1 mm (2400 units = 2.40m ceiling)</option>
+    <option value="1m">1 m (2.4 units = 2.40m ceiling)</option>
+  </param>
+
+  <param name="smoothness" type="float" min="0.0001" max="5" precision="4" gui-text="Curve Smoothing">0.2</param>
+  <_param name="smoothness_help" type="description">Smaller values are smoother but generate larger files.</_param>
+
+  <effect needs-live-preview="false">
+    <object-type>all</object-type>
+    <effects-menu>
+      <submenu _name="Generate from Path"/>
+    </effects-menu>
+  </effect>
+  <script>
+    <command reldir="extensions" interpreter="python">floorplan2openscad/floorplan2openscad.py</command>
+  </script>
+</inkscape-extension>

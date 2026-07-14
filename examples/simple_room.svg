@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  simple_room.svg — basic single room demonstrating:
+    - wall_outer_ with a donut path (outer ring + interior hole) to test hole detection
+    - floor_slab_ for the interior area
+    - window_standard_ on the north wall
+    - door_wood_ on the south wall
+
+  Run with: Extensions → Generate from Path → Semantic Floorplan to OpenSCAD
+  Recommended base scale: 3 cm  (each SVG px ≈ 0.265 mm → room is ~16m × 11m at 1:100)
+-->
+<svg
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   width="600"
+   height="500"
+   viewBox="0 0 600 500"
+   inkscape:version="1.3 (0e150ed, 2023-07-21)"
+   sodipodi:docname="simple_room.svg">
+
+  <sodipodi:namedview inkscape:document-units="px"/>
+
+  <!-- Floor slab (interior area) -->
+  <g inkscape:groupmode="layer" inkscape:label="floor_slab_main" id="floor_slab_main">
+    <rect
+       id="floor"
+       x="70" y="70" width="460" height="360"
+       style="fill:#d4c5a9;stroke:none"/>
+  </g>
+
+  <!-- Outer wall ring as a single path with two subpaths (donut).
+       The extension's hole detection recognises the inner path as a cutout. -->
+  <g inkscape:groupmode="layer" inkscape:label="wall_outer_perimeter" id="wall_outer_perimeter">
+    <path
+       id="outer_wall_ring"
+       d="M 50,50 L 550,50 L 550,450 L 50,450 Z M 70,70 L 70,430 L 530,430 L 530,70 Z"
+       style="fill:#888888;stroke:none"/>
+  </g>
+
+  <!-- Window on the north wall -->
+  <g inkscape:groupmode="layer" inkscape:label="window_standard_north" id="window_standard_north">
+    <rect
+       id="window_north"
+       x="190" y="50" width="140" height="20"
+       style="fill:#aaddff;stroke:none"/>
+  </g>
+
+  <!-- Wooden door on the south wall -->
+  <g inkscape:groupmode="layer" inkscape:label="door_wood_entrance" id="door_wood_entrance">
+    <rect
+       id="door_south"
+       x="230" y="430" width="90" height="20"
+       style="fill:#7a4a1e;stroke:none"/>
+  </g>
+
+</svg>

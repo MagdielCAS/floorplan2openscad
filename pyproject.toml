@@ -1,0 +1,23 @@
+[project]
+name = "floorplan2openscad"
+version = "0.1.0"
+requires-python = ">=3.12"
+# inkex is intentionally absent: it is bundled with Inkscape and cannot be
+# pip-installed without system Cairo/pkg-config headers. svg_parser.py needs
+# it at runtime but geometry, categories, and openscad_writer are pure Python,
+# so the test suite runs without Inkscape installed.
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

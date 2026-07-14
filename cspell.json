@@ -1,19 +1,32 @@
 {
   "version": "0.2",
+  "languageSettings": [
+    { "languageId": "xml,svg", "enabled": false }
+  ],
   "words": [
+    "addNS",
     "argparse",
     "bbox",
     "bezier",
+    "docname",
     "errormsg",
     "floorplan",
     "fname",
+    "groupmode",
     "inkex",
     "Inkscape",
+    "inkscape",
+    "namedview",
     "openscad",
+    "polyline",
     "PYTHONPATH",
     "reldir",
+    "sodipodi",
     "superpath",
     "subpaths",
-    "wardrobe"
+    "vinfo",
+    "viewbox",
+    "wardrobe",
+    "xlink"
   ]
 }

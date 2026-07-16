@@ -14,19 +14,26 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import inkex
 
-from categories import get_scale_config, resolve_category
+from categories import find_layer_label, get_scale_config, node_label, resolve_category
 from mesh_validator import find_cross_object_overlaps, validate_geometry
 from openscad_writer import build_items, write_scad
 from svg_parser import SVGParser
 
 _GEOMETRY_WARNING_MESSAGES = {
-    "self_intersecting": "shape '{name}' is self-intersecting (bowtie/figure-8) and will likely produce a degenerate 3D mesh.",
+    "self_intersecting": "shape {obj} is self-intersecting (bowtie/figure-8) and will likely produce a degenerate 3D mesh.",
     "unclosed": (
-        "shape '{name}' has an unclosed subpath; OpenSCAD's polygon() will silently auto-close it "
+        "shape {obj} has an unclosed subpath; OpenSCAD's polygon() will silently auto-close it "
         "with a straight line, which may not match your intent."
     ),
-    "degenerate": "shape '{name}' has a near-zero-area subpath (collinear/duplicate points) and may not render.",
+    "degenerate": "shape {obj} has a near-zero-area subpath (collinear/duplicate points) and may not render.",
 }
+
+
+def _node_descriptor(node):
+    """Human-facing "'name' (layer 'layer_name')" description, for locating a node in Inkscape."""
+    name = node_label(node)
+    layer = find_layer_label(node)
+    return f"'{name}' (layer '{layer}')" if layer else f"'{name}'"
 
 
 class FloorplanToOpenSCAD(inkex.EffectExtension):
@@ -98,10 +105,10 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
         for node, subpath_list in paths_dict.items():
             _, module_name = resolve_category(node)
             if not module_name:
-                name = self._node_label(node)
-                if name not in self._warnings_printed:
-                    inkex.errormsg(f"Warning: Object '{name}' did not match any category prefix. Falling back to 'wall'.")
-                    self._warnings_printed.add(name)
+                obj = _node_descriptor(node)
+                if obj not in self._warnings_printed:
+                    inkex.errormsg(f"Warning: Object {obj} did not match any category prefix. Falling back to 'wall'.")
+                    self._warnings_printed.add(obj)
                 module_name = "wall"
             paths_with_modules.append((module_name, subpath_list))
 
@@ -121,24 +128,20 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
 
     # ----------------------------------------------------------------- helpers
 
-    @staticmethod
-    def _node_label(node):
-        return node.get("{http://www.inkscape.org/namespaces/inkscape}label") or node.get("id", "unnamed")
-
     def _emit_warnings(self, warnings):
         for w in warnings:
-            name = self._node_label(w.node)
+            obj = _node_descriptor(w.node)
             if w.kind == "overlap":
-                other_name = self._node_label(w.other_node)
-                a, b = sorted((name, other_name))
+                other_obj = _node_descriptor(w.other_node)
+                a, b = sorted((obj, other_obj))
                 key = f"overlap:{a}:{b}"
                 msg = (
-                    f"Warning: Objects '{a}' and '{b}' overlap without one fully containing the other; "
+                    f"Warning: Objects {a} and {b} overlap without one fully containing the other; "
                     "this may produce coincident/overlapping faces in the 3D output."
                 )
             else:
-                key = f"{w.kind}:{name}"
-                msg = f"Warning: {_GEOMETRY_WARNING_MESSAGES[w.kind].format(name=name)}"
+                key = f"{w.kind}:{obj}"
+                msg = f"Warning: {_GEOMETRY_WARNING_MESSAGES[w.kind].format(obj=obj)}"
             if key not in self._warnings_printed:
                 self._warnings_printed.add(key)
                 inkex.errormsg(msg)

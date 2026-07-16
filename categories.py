@@ -62,6 +62,7 @@ SCALE_PRESETS = {
 _DEFAULT_SCALE = "3cm"
 
 _INKSCAPE_LABEL = "{http://www.inkscape.org/namespaces/inkscape}label"
+_INKSCAPE_GROUPMODE = "{http://www.inkscape.org/namespaces/inkscape}groupmode"
 
 
 def get_scale_config(scale_opt):
@@ -101,3 +102,22 @@ def resolve_category(node):
         parent = parent.getparent()
 
     return None, None
+
+
+def node_label(node):
+    """Human-facing label for a node: its Inkscape label, or its id."""
+    return node.get(_INKSCAPE_LABEL) or node.get("id", "unnamed")
+
+
+def find_layer_label(node):
+    """Walk up node's ancestors to find the label of the nearest Inkscape layer group.
+
+    Works with the same duck-typed .get()/.getparent() contract as resolve_category.
+    Returns None if node isn't nested inside any layer.
+    """
+    parent = node.getparent()
+    while parent is not None:
+        if parent.get(_INKSCAPE_GROUPMODE) == "layer":
+            return node_label(parent)
+        parent = parent.getparent()
+    return None

@@ -3,8 +3,10 @@ import pytest
 from categories import (
     CATEGORIES,
     SCALE_PRESETS,
+    find_layer_label,
     get_scale_config,
     match_category,
+    node_label,
     resolve_category,
 )
 
@@ -139,6 +141,7 @@ class _MockNode:
 
 
 _INKSCAPE_LABEL = "{http://www.inkscape.org/namespaces/inkscape}label"
+_INKSCAPE_GROUPMODE = "{http://www.inkscape.org/namespaces/inkscape}groupmode"
 
 
 def test_resolve_category_by_id():
@@ -165,3 +168,42 @@ def test_resolve_category_no_match_returns_none():
     prefix, module_name = resolve_category(node)
     assert prefix is None
     assert module_name is None
+
+
+# -------------------------------------------------------------------- node_label
+
+
+def test_node_label_prefers_inkscape_label():
+    node = _MockNode({"id": "rect42", _INKSCAPE_LABEL: "wall_outer_north"})
+    assert node_label(node) == "wall_outer_north"
+
+
+def test_node_label_falls_back_to_id():
+    node = _MockNode({"id": "rect42"})
+    assert node_label(node) == "rect42"
+
+
+def test_node_label_falls_back_to_unnamed():
+    node = _MockNode({})
+    assert node_label(node) == "unnamed"
+
+
+# --------------------------------------------------------------- find_layer_label
+
+
+def test_find_layer_label_direct_parent():
+    layer = _MockNode({_INKSCAPE_GROUPMODE: "layer", _INKSCAPE_LABEL: "wall_outer_perimeter"})
+    node = _MockNode({"id": "outer_wall_ring"}, parent=layer)
+    assert find_layer_label(node) == "wall_outer_perimeter"
+
+
+def test_find_layer_label_skips_non_layer_groups():
+    layer = _MockNode({_INKSCAPE_GROUPMODE: "layer", _INKSCAPE_LABEL: "wall_outer_perimeter"})
+    group = _MockNode({"id": "decorative_group"}, parent=layer)
+    node = _MockNode({"id": "outer_wall_ring"}, parent=group)
+    assert find_layer_label(node) == "wall_outer_perimeter"
+
+
+def test_find_layer_label_no_layer_ancestor():
+    node = _MockNode({"id": "outer_wall_ring"})
+    assert find_layer_label(node) is None

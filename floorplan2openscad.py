@@ -15,8 +15,18 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import inkex
 
 from categories import get_scale_config, resolve_category
+from mesh_validator import find_cross_object_overlaps, validate_geometry
 from openscad_writer import build_items, write_scad
 from svg_parser import SVGParser
+
+_GEOMETRY_WARNING_MESSAGES = {
+    "self_intersecting": "shape '{name}' is self-intersecting (bowtie/figure-8) and will likely produce a degenerate 3D mesh.",
+    "unclosed": (
+        "shape '{name}' has an unclosed subpath; OpenSCAD's polygon() will silently auto-close it "
+        "with a straight line, which may not match your intent."
+    ),
+    "degenerate": "shape '{name}' has a near-zero-area subpath (collinear/duplicate points) and may not render.",
+}
 
 
 class FloorplanToOpenSCAD(inkex.EffectExtension):
@@ -45,6 +55,23 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
             default=0.2,
             help="Bezier curve smoothing tolerance (smaller = smoother).",
         )
+        pars.add_argument(
+            "--check_geometry",
+            dest="check_geometry",
+            type=inkex.Boolean,
+            default=True,
+            help="Warn about self-intersecting, unclosed, or degenerate (zero-area) shapes.",
+        )
+        pars.add_argument(
+            "--check_overlap",
+            dest="check_overlap",
+            type=inkex.Boolean,
+            default=False,
+            help=(
+                "Warn about overlapping objects that aren't fully nested (holes) inside one another. "
+                "Off by default: mitered wall corners and floor-under-wall overlap are common and harmless."
+            ),
+        )
 
     def effect(self):
         self._handle_view_box()
@@ -62,11 +89,16 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
             inkex.errormsg("Warning: No valid paths or shapes found in document.")
             return
 
+        if self.options.check_geometry:
+            self._emit_warnings(validate_geometry(paths_dict))
+        if self.options.check_overlap:
+            self._emit_warnings(find_cross_object_overlaps(paths_dict))
+
         paths_with_modules = []
         for node, subpath_list in paths_dict.items():
             _, module_name = resolve_category(node)
             if not module_name:
-                name = node.get("{http://www.inkscape.org/namespaces/inkscape}label") or node.get("id", "unnamed")
+                name = self._node_label(node)
                 if name not in self._warnings_printed:
                     inkex.errormsg(f"Warning: Object '{name}' did not match any category prefix. Falling back to 'wall'.")
                     self._warnings_printed.add(name)
@@ -88,6 +120,28 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
             inkex.errormsg(f"Unable to write file {self.options.fname}: {e}")
 
     # ----------------------------------------------------------------- helpers
+
+    @staticmethod
+    def _node_label(node):
+        return node.get("{http://www.inkscape.org/namespaces/inkscape}label") or node.get("id", "unnamed")
+
+    def _emit_warnings(self, warnings):
+        for w in warnings:
+            name = self._node_label(w.node)
+            if w.kind == "overlap":
+                other_name = self._node_label(w.other_node)
+                a, b = sorted((name, other_name))
+                key = f"overlap:{a}:{b}"
+                msg = (
+                    f"Warning: Objects '{a}' and '{b}' overlap without one fully containing the other; "
+                    "this may produce coincident/overlapping faces in the 3D output."
+                )
+            else:
+                key = f"{w.kind}:{name}"
+                msg = f"Warning: {_GEOMETRY_WARNING_MESSAGES[w.kind].format(name=name)}"
+            if key not in self._warnings_printed:
+                self._warnings_printed.add(key)
+                inkex.errormsg(msg)
 
     def _handle_view_box(self):
         inkscape_version = self.svg.get("{http://www.inkscape.org/namespaces/inkscape}version")

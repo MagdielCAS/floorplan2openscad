@@ -17,6 +17,10 @@
   <param name="smoothness" type="float" min="0.0001" max="5" precision="4" gui-text="Curve Smoothing">0.2</param>
   <_param name="smoothness_help" type="description">Smaller values are smoother but generate larger files.</_param>
 
+  <param name="check_geometry" type="bool" gui-text="Warn about invalid geometry (self-intersections, unclosed paths, zero-area shapes)">true</param>
+  <param name="check_overlap" type="bool" gui-text="Warn about overlapping objects (non-nested overlaps between shapes)">false</param>
+  <_param name="check_overlap_help" type="description">Off by default: mitered wall corners and a floor slab running under a wall edge are common, harmless overlaps.</_param>
+
   <effect needs-live-preview="false">
     <object-type>all</object-type>
     <effects-menu>

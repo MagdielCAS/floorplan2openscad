@@ -23,6 +23,11 @@ def bbox_in_bbox(inner, outer):
     return not (inner[0] < outer[0] or inner[1] > outer[1] or inner[2] < outer[2] or inner[3] > outer[3])
 
 
+def bboxes_intersect(bbox1, bbox2):
+    """bbox = (xmin, xmax, ymin, ymax). True if the two boxes overlap (or touch)."""
+    return not (bbox1[1] < bbox2[0] or bbox2[1] < bbox1[0] or bbox1[3] < bbox2[2] or bbox2[3] < bbox1[2])
+
+
 def point_in_poly(p, poly, bbox=None):
     if p is None or poly is None:
         return False

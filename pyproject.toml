@@ -4,8 +4,8 @@ version = "0.1.0"
 requires-python = ">=3.12"
 # inkex is intentionally absent: it is bundled with Inkscape and cannot be
 # pip-installed without system Cairo/pkg-config headers. svg_parser.py needs
-# it at runtime but geometry, categories, and openscad_writer are pure Python,
-# so the test suite runs without Inkscape installed.
+# it at runtime but geometry, categories, mesh_validator, and openscad_writer
+# are pure Python, so the test suite runs without Inkscape installed.
 dependencies = []
 
 [dependency-groups]
@@ -34,7 +34,7 @@ testpaths = ["tests"]
 pythonpath = ["."]
 
 [tool.coverage.run]
-source = ["categories", "geometry", "openscad_writer", "svg_parser", "floorplan2openscad"]
+source = ["categories", "geometry", "mesh_validator", "openscad_writer", "svg_parser", "floorplan2openscad"]
 omit = ["tests/*"]
 
 [tool.ruff]

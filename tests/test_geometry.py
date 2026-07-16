@@ -2,6 +2,7 @@ import pytest
 
 from geometry import (
     bbox_in_bbox,
+    bboxes_intersect,
     format_paths,
     format_points,
     parse_length_with_units,
@@ -35,6 +36,18 @@ def test_bbox_in_bbox_overflow():
 
 def test_bbox_in_bbox_identical():
     assert bbox_in_bbox((0, 10, 0, 10), (0, 10, 0, 10)) is True
+
+
+def test_bboxes_intersect_overlapping():
+    assert bboxes_intersect((0, 10, 0, 10), (5, 15, 5, 15)) is True
+
+
+def test_bboxes_intersect_disjoint():
+    assert bboxes_intersect((0, 10, 0, 10), (20, 30, 20, 30)) is False
+
+
+def test_bboxes_intersect_touching_edge():
+    assert bboxes_intersect((0, 10, 0, 10), (10, 20, 0, 10)) is True
 
 
 # ----------------------------------------------------------- point_in_poly

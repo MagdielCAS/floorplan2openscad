@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y libxml2-utils
-      - run: xmllint --noout floorplan2openscad.inx
+      - run: xmllint --noout floorplan2openscad.inx floorplan_add_layer.inx templates/floorplan-starter.svg
 
   test:
     name: Test + coverage
@@ -60,3 +60,22 @@ jobs:
         run: |
           test -s /tmp/smoke.scad
           grep -q "BASE_Z_SCALE" /tmp/smoke.scad
+
+  smoke-add-layer:
+    name: End-to-end Add Semantic Layer smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: sudo apt-get update && sudo apt-get install -y inkscape
+      - run: uv sync --group inkex-runtime
+      - name: Add a layer to the example floor plan
+        run: |
+          PYTHONPATH="/usr/share/inkscape/extensions" uv run --group inkex-runtime python floorplan_add_layer.py \
+            --category=wardrobe_ --suffix=test --placement=top < examples/simple_room.svg > /tmp/add_layer_smoke.svg
+      - name: Verify the new layer was inserted
+        run: |
+          grep -q 'id="wardrobe_test"' /tmp/add_layer_smoke.svg
+          grep -q 'inkscape:groupmode="layer"' /tmp/add_layer_smoke.svg

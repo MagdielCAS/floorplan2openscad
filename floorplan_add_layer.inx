@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+  <_name>Add Semantic Layer</_name>
+  <id>org.inkscape.floorplan2openscad.add_layer</id>
+
+  <!-- Option values below must exactly match categories.CATEGORIES keys.
+       Enforced by tests/test_floorplan_add_layer_inx.py. -->
+  <param name="category" type="optiongroup" appearance="minimal" gui-text="Layer category">
+    <option value="floor_">Floor slab (floor_)</option>
+    <option value="wall_outer_">Outer wall (wall_outer_)</option>
+    <option value="wall_inner_">Inner wall (wall_inner_)</option>
+    <option value="wall_balcony_">Balcony wall (wall_balcony_)</option>
+    <option value="door_wood_">Wood door (door_wood_)</option>
+    <option value="door_glass_">Glass door (door_glass_)</option>
+    <option value="sliding_door_">Sliding door (sliding_door_)</option>
+    <option value="window_standard_">Standard window (window_standard_)</option>
+    <option value="wardrobe_">Wardrobe (wardrobe_)</option>
+  </param>
+
+  <param name="suffix" type="string" gui-text="Layer name suffix">1</param>
+
+  <param name="placement" type="optiongroup" appearance="minimal" gui-text="Placement">
+    <option value="top">Top-level layer</option>
+    <option value="sub">Sublayer of the active layer</option>
+  </param>
+
+  <effect needs-live-preview="false">
+    <object-type>all</object-type>
+    <effects-menu>
+      <submenu _name="Floorplan"/>
+    </effects-menu>
+  </effect>
+  <script>
+    <command reldir="extensions" interpreter="python">floorplan2openscad/floorplan_add_layer.py</command>
+  </script>
+</inkscape-extension>

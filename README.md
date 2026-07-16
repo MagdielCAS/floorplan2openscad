@@ -34,6 +34,8 @@ Name your Inkscape layers (or individual object IDs) with one of the following p
 
 > **Warning:** If an object or layer does not match any known prefix, it falls back to a standard `wall` extrusion, and a warning is printed in the Inkscape interface.
 
+This table, the **Add Semantic Layer** extension's dropdown, and the starter template below are all derived from the same `CATEGORIES` mapping in `categories.py`, and the latter two are checked in CI against that mapping — so there's nothing to keep in sync by hand beyond this table itself.
+
 ---
 
 ## Base Scale Configuration
@@ -54,14 +56,24 @@ The dropdown in the Inkscape extension interface adjusts the unit scale and para
    - **Linux**: `~/.config/inkscape/extensions/`
    - **macOS**: `~/Library/Application Support/org.inkscape.Inkscape/config/inkscape/extensions/`
    - **Windows**: `%APPDATA%\inkscape\extensions\`
-3. Restart Inkscape. The extension will appear under **Extensions → Generate from Path → Semantic Floorplan to OpenSCAD**.
+3. Restart Inkscape. The extension will appear under **Extensions → Generate from Path → Semantic Floorplan to OpenSCAD**, and a second helper extension under **Extensions → Floorplan → Add Semantic Layer**.
+
+### Installing the starter template (optional)
+
+To start new floor plans with all nine category layers already created, copy `templates/floorplan-starter.svg` into Inkscape's templates directory:
+
+- **Linux**: `~/.config/inkscape/templates/`
+- **macOS**: `~/Library/Application Support/org.inkscape.Inkscape/config/inkscape/templates/`
+- **Windows**: `%APPDATA%\inkscape\templates\`
+
+Restart Inkscape; the template then appears under **File → New From Template**. Delete any layers you don't need before drawing.
 
 ---
 
 ## How to Use
 
 1. Draw your floor plan elements in Inkscape.
-2. Group or layer your shapes and label the layers using one of the prefixes above (e.g., a layer named `wall_outer_ground`).
+2. Group or layer your shapes and label the layers using one of the prefixes above (e.g., a layer named `wall_outer_ground`). Instead of typing a prefix by hand, you can run **Extensions → Floorplan → Add Semantic Layer**, pick a category from the dropdown, and give it a name suffix — it creates the correctly-prefixed layer for you (as a top-level layer or a sublayer of the active layer). Starting from the starter template (see above) skips this step entirely for the common categories.
 3. Convert all shapes to paths: **Path → Object to Path** (Ctrl+Shift+C).
 4. Run the extension: Go to **Extensions → Generate from Path → Semantic Floorplan to OpenSCAD**.
 5. Select your output `.scad` filename and base scale, then click **Apply**.

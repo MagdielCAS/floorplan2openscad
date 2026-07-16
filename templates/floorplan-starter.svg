@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  floorplan-starter.svg — one empty layer per known semantic category prefix.
+
+  See the floorplan2openscad README's "Semantic Categories & Prefix Rules"
+  table for what each prefix maps to, or run Extensions → Floorplan →
+  Add Semantic Layer to create additional correctly-prefixed layers from a
+  dropdown. Delete any layers you don't need before drawing your floor plan.
+-->
+<svg
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   width="600"
+   height="500"
+   viewBox="0 0 600 500"
+   inkscape:version="1.3 (0e150ed, 2023-07-21)"
+   sodipodi:docname="floorplan-starter.svg">
+
+  <inkscape:templateinfo>
+    <inkscape:name>Floorplan Starter</inkscape:name>
+    <inkscape:shortdesc>One empty layer per semantic category prefix, for use with floorplan2openscad</inkscape:shortdesc>
+    <inkscape:author>floorplan2openscad</inkscape:author>
+  </inkscape:templateinfo>
+
+  <sodipodi:namedview inkscape:document-units="px"/>
+
+  <g inkscape:groupmode="layer" inkscape:label="floor_1" id="floor_1"/>
+  <g inkscape:groupmode="layer" inkscape:label="wall_outer_1" id="wall_outer_1"/>
+  <g inkscape:groupmode="layer" inkscape:label="wall_inner_1" id="wall_inner_1"/>
+  <g inkscape:groupmode="layer" inkscape:label="wall_balcony_1" id="wall_balcony_1"/>
+  <g inkscape:groupmode="layer" inkscape:label="door_wood_1" id="door_wood_1"/>
+  <g inkscape:groupmode="layer" inkscape:label="door_glass_1" id="door_glass_1"/>
+  <g inkscape:groupmode="layer" inkscape:label="sliding_door_1" id="sliding_door_1"/>
+  <g inkscape:groupmode="layer" inkscape:label="window_standard_1" id="window_standard_1"/>
+  <g inkscape:groupmode="layer" inkscape:label="wardrobe_1" id="wardrobe_1"/>
+
+</svg>

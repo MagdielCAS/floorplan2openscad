@@ -25,7 +25,7 @@ help:
 	@echo "  lint      - run ruff check"
 	@echo "  format    - run ruff format"
 	@echo "  convert   - convert an SVG floor plan to OpenSCAD (SVG=, OUT=, SCALE=)"
-	@echo "  validate-inx - check floorplan2openscad.inx is well-formed XML"
+	@echo "  validate-inx - check the .inx descriptors and starter template are well-formed XML"
 	@echo "  clean     - remove caches and build artifacts"
 
 .PHONY: install
@@ -61,7 +61,7 @@ convert:
 
 .PHONY: validate-inx
 validate-inx:
-	xmllint --noout floorplan2openscad.inx
+	xmllint --noout floorplan2openscad.inx floorplan_add_layer.inx templates/floorplan-starter.svg
 
 .PHONY: clean
 clean:

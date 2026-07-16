@@ -17,10 +17,10 @@ make coverage    # pytest with term + html coverage report
 make lint        # ruff check
 make format      # ruff format
 make convert     # run the extension against an SVG (SVG=, OUT=, SCALE=)
-make validate-inx  # xmllint --noout on the .inx descriptor
+make validate-inx  # xmllint --noout on the .inx descriptors and starter template
 ```
 
-`categories.py`, `geometry.py`, `mesh_validator.py`, `mesh_repair.py`, and `openscad_writer.py` are pure Python and covered by `tests/`. `svg_parser.py` and `floorplan2openscad.py` import `inkex`, which is bundled with Inkscape rather than pip-installable, so `make convert` points `PYTHONPATH` at Inkscape's bundled `inkex` source (`INKEX_PATH`, auto-detected per OS, overridable) and installs `inkex`'s pure-pip runtime deps (numpy, lxml, Pillow, tinycss2, pyserial, cssselect — no Cairo needed) via the `inkex-runtime` dependency group. Reload after editing: in Inkscape, go to Extensions → Reload All Extensions (or restart Inkscape).
+`categories.py`, `geometry.py`, `mesh_validator.py`, `mesh_repair.py`, `openscad_writer.py`, and `layer_naming.py` are pure Python and covered by `tests/`. `svg_parser.py`, `floorplan2openscad.py`, and `floorplan_add_layer.py` import `inkex`, which is bundled with Inkscape rather than pip-installable, so `make convert` points `PYTHONPATH` at Inkscape's bundled `inkex` source (`INKEX_PATH`, auto-detected per OS, overridable) and installs `inkex`'s pure-pip runtime deps (numpy, lxml, Pillow, tinycss2, pyserial, cssselect — no Cairo needed) via the `inkex-runtime` dependency group. Reload after editing: in Inkscape, go to Extensions → Reload All Extensions (or restart Inkscape).
 
 Python version is pinned to `3.12.0` via `.tool-versions` (asdf).
 
@@ -55,6 +55,14 @@ The `CATEGORIES` dict (top of the file) maps layer/ID prefix strings → OpenSCA
 ### Scale system
 
 The `base_scale` option selects a preset that sets all dimensional constants (wall height, door clearance, sill heights, floor thickness, and a `scale_factor` that converts SVG px to real-world units). All values in the output are written as `{raw_value}/{raw_value_at_3cm} * BASE_Z_SCALE` expressions so the user can rescale the model by changing a single OpenSCAD variable.
+
+### Add Semantic Layer extension
+
+A second, independent extension pair — `floorplan_add_layer.inx` + `floorplan_add_layer.py`, registered under *Extensions → Floorplan → Add Semantic Layer* — creates a new layer pre-named with one of the `CATEGORIES` prefixes, so users pick from a dropdown instead of typing/memorizing a prefix. The category `<option>` values in the `.inx` are hand-authored (INX is static XML) but drift-guarded by `tests/test_floorplan_add_layer_inx.py`, which asserts they exactly match `categories.CATEGORIES` keys. The pure suffix-sanitizing/id-building logic lives in `layer_naming.py` (`sanitize_suffix`, `build_layer_name`, `unique_layer_name`); `floorplan_add_layer.py` is thin `inkex` glue that builds an `inkex.Layer` and inserts it as a top-level layer or as a sublayer of the active layer (`placement` option), relying on `EffectExtension`'s default `run()` to write the mutated document back — unlike `floorplan2openscad.py`, it doesn't write a separate output file.
+
+### Starter template
+
+`templates/floorplan-starter.svg` ships one empty, correctly-named layer per `CATEGORIES` prefix. Users copy it into Inkscape's templates directory (path documented in README) to make it available under *File → New From Template*. `tests/test_templates.py` parses it and asserts every layer resolves to a known category via `categories.match_category`, with all nine categories represented exactly once.
 
 ## OpenSCAD constructs used in generated output
 

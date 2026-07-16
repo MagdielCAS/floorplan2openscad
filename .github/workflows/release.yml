@@ -18,7 +18,7 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: sudo apt-get update && sudo apt-get install -y libxml2-utils
-      - run: xmllint --noout floorplan2openscad.inx
+      - run: xmllint --noout floorplan2openscad.inx floorplan_add_layer.inx floorplan_add_ruler.inx
       - run: uv run pytest
 
   build-release:
@@ -43,8 +43,12 @@ jobs:
         run: |
           STAGE_DIR="$(mktemp -d)/floorplan2openscad"
           mkdir -p "$STAGE_DIR"
-          cp floorplan2openscad.inx floorplan2openscad.py categories.py geometry.py \
-             openscad_writer.py svg_parser.py LICENSE README.md "$STAGE_DIR/"
+          cp floorplan2openscad.inx floorplan2openscad.py \
+             floorplan_add_layer.inx floorplan_add_layer.py \
+             floorplan_add_ruler.inx floorplan_add_ruler.py \
+             categories.py geometry.py mesh_repair.py mesh_validator.py \
+             openscad_writer.py svg_parser.py layer_naming.py ruler.py \
+             LICENSE README.md "$STAGE_DIR/"
           (cd "$(dirname "$STAGE_DIR")" && zip -r "$GITHUB_WORKSPACE/floorplan2openscad-${GITHUB_REF_NAME}.zip" floorplan2openscad)
 
       - name: Create GitHub release

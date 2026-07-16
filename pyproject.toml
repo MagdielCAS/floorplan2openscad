@@ -44,6 +44,8 @@ source = [
     "floorplan2openscad",
     "layer_naming",
     "floorplan_add_layer",
+    "ruler",
+    "floorplan_add_ruler",
 ]
 omit = ["tests/*"]
 

@@ -46,6 +46,7 @@ _REQUIRED_KEYS = {
     "floor_thickness",
     "balcony_height",
     "frame_width",
+    "mm_per_unit",
     "scale_factor",
 }
 
@@ -53,6 +54,18 @@ _REQUIRED_KEYS = {
 @pytest.mark.parametrize("scale", ["3cm", "1cm", "1mm", "1m"])
 def test_scale_presets_have_required_keys(scale):
     assert _REQUIRED_KEYS <= set(SCALE_PRESETS[scale].keys())
+
+
+@pytest.mark.parametrize("scale", ["3cm", "1cm", "1mm", "1m"])
+def test_scale_factor_is_self_canceling_across_presets(scale):
+    # scale_factor * mm_per_unit is always 25.4/96 (mm per raw SVG unit at
+    # 96dpi) regardless of preset -- base_scale relabels the output unit and
+    # sets Z-heights, but never rescales a drawing's real-world XY footprint.
+    # This is exactly why ruler.py calibrates against document geometry
+    # instead of base_scale, and why floorplan2openscad._resolve_scale_config
+    # can safely divide a ruler measurement by mm_per_unit to get scale_factor.
+    cfg = SCALE_PRESETS[scale]
+    assert cfg["scale_factor"] * cfg["mm_per_unit"] == pytest.approx(25.4 / 96.0)
 
 
 def test_scale_preset_3cm_ceiling():

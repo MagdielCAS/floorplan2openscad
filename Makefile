@@ -61,7 +61,7 @@ convert:
 
 .PHONY: validate-inx
 validate-inx:
-	xmllint --noout floorplan2openscad.inx floorplan_add_layer.inx templates/floorplan-starter.svg
+	xmllint --noout floorplan2openscad.inx floorplan_add_layer.inx floorplan_add_ruler.inx templates/floorplan-starter.svg
 
 .PHONY: clean
 clean:

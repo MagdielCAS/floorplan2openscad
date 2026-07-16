@@ -1,9 +1,12 @@
 """SVG document traversal and vertex extraction. Requires inkex."""
 
+import math
+
 import inkex
 from inkex.bezier import beziersplitatt, maxdist
 
 from geometry import parse_length_with_units
+from ruler import RULER_LENGTH_ATTR, RULER_MARKER_ATTR
 
 
 def _subdivide_cubic_path(sp, flat, i=1):
@@ -81,6 +84,8 @@ class SVGParser:
             if v in ("hidden", "collapse"):
                 continue
             if node.get("style", "") == "display:none":
+                continue
+            if node.get(RULER_MARKER_ATTR):
                 continue
 
             mat_new = mat_current @ inkex.Transform(node.get("transform"))
@@ -209,3 +214,45 @@ class SVGParser:
         cy = float(node.get("cy", "0"))
         x1, x2 = cx - rx, cx + rx
         return f"M {x1},{cy} A {rx},{ry} 0 1 0 {x2},{cy} A {rx},{ry} 0 1 0 {x1},{cy}"
+
+
+def find_ruler_calibration(svg, doc_transform):
+    """Find the on-canvas scale-ruler bar (see ruler.py) and measure its current length.
+
+    Ignores visibility -- the ruler calibrates the floor plan's scale even
+    if the user hid it after resizing it, unlike normal shape traversal
+    which skips hidden nodes.
+
+    Returns (raw_length, real_world_mm, extra_matches) or None if no ruler
+    bar is present. raw_length is in the same coordinate space as the
+    vertices SVGParser.parse produces (i.e. after doc_transform). extra_matches
+    counts additional ruler bars found beyond the first one used, so the
+    caller can warn about ambiguity.
+    """
+    matches = svg.xpath(f"//*[@{RULER_LENGTH_ATTR}]")
+    if not matches:
+        return None
+
+    node = matches[0]
+    d = node.get("d")
+    if not d:
+        return None
+
+    try:
+        p = inkex.paths.Path(d).to_superpath()
+    except Exception:
+        return None
+    if not p or not p[0]:
+        return None
+
+    p = p.transform(doc_transform @ node.composed_transform())
+    first = p[0][0][1]
+    last = p[0][-1][1]
+    raw_length = math.hypot(last[0] - first[0], last[1] - first[1])
+
+    try:
+        real_world_mm = float(node.get(RULER_LENGTH_ATTR))
+    except (TypeError, ValueError):
+        return None
+
+    return raw_length, real_world_mm, len(matches) - 1

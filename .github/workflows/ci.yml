@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y libxml2-utils
-      - run: xmllint --noout floorplan2openscad.inx floorplan_add_layer.inx templates/floorplan-starter.svg
+      - run: xmllint --noout floorplan2openscad.inx floorplan_add_layer.inx floorplan_add_ruler.inx templates/floorplan-starter.svg
 
   test:
     name: Test + coverage
@@ -79,3 +79,59 @@ jobs:
         run: |
           grep -q 'id="wardrobe_test"' /tmp/add_layer_smoke.svg
           grep -q 'inkscape:groupmode="layer"' /tmp/add_layer_smoke.svg
+
+  smoke-add-ruler:
+    name: End-to-end Add Scale Ruler smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: sudo apt-get update && sudo apt-get install -y inkscape
+      - run: uv sync --group inkex-runtime
+      - name: Add a scale ruler to the example floor plan
+        run: |
+          PYTHONPATH="/usr/share/inkscape/extensions" uv run --group inkex-runtime python floorplan_add_ruler.py \
+            --length=1m --corner=bottom-left < examples/simple_room.svg > /tmp/add_ruler_smoke.svg
+      - name: Verify the ruler layer was inserted and carries its calibration marker/length
+        run: |
+          grep -q 'id="ruler_guide"' /tmp/add_ruler_smoke.svg
+          grep -q 'data-floorplan-ruler="1"' /tmp/add_ruler_smoke.svg
+          grep -q 'data-ruler-mm="1000.0"' /tmp/add_ruler_smoke.svg
+          grep -q '>1 m<' /tmp/add_ruler_smoke.svg
+
+  smoke-ruler-calibration:
+    name: End-to-end ruler-calibrated scale smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: sudo apt-get update && sudo apt-get install -y inkscape
+      - run: uv sync --group inkex-runtime
+      - name: Baseline convert (no ruler present)
+        run: |
+          PYTHONPATH="/usr/share/inkscape/extensions" uv run --group inkex-runtime python floorplan2openscad.py \
+            --fname=/tmp/baseline.scad --base_scale=3cm < examples/simple_room.svg
+      - name: Add a 1m ruler, then convert without resizing it
+        run: |
+          PYTHONPATH="/usr/share/inkscape/extensions" uv run --group inkex-runtime python floorplan_add_ruler.py \
+            --length=1m --corner=bottom-left < examples/simple_room.svg > /tmp/with_ruler.svg
+          PYTHONPATH="/usr/share/inkscape/extensions" uv run --group inkex-runtime python floorplan2openscad.py \
+            --fname=/tmp/unresized.scad --base_scale=3cm < /tmp/with_ruler.svg
+      - name: An untouched ruler must not change the scale, and must not appear in the output
+        run: |
+          diff <(grep SCALE_FACTOR /tmp/baseline.scad) <(grep SCALE_FACTOR /tmp/unresized.scad)
+          ! grep -qi "ruler" /tmp/unresized.scad
+      - name: Simulate the user shrinking the ruler bar, then convert again
+        run: |
+          sed 's#M 15.0,485.0 L 3794.527559055118,485.0#M 15.0,485.0 L 615.0,485.0#' /tmp/with_ruler.svg > /tmp/resized.svg
+          grep -q 'M 15.0,485.0 L 615.0,485.0' /tmp/resized.svg
+          PYTHONPATH="/usr/share/inkscape/extensions" uv run --group inkex-runtime python floorplan2openscad.py \
+            --fname=/tmp/resized.scad --base_scale=3cm < /tmp/resized.svg
+      - name: A resized ruler must calibrate the scale to match its new length
+        run: |
+          grep -q "SCALE_FACTOR     = 0.05555556;" /tmp/resized.scad
+          ! grep -qi "ruler" /tmp/resized.scad

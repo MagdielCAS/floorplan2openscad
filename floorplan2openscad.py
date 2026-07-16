@@ -18,7 +18,7 @@ from categories import find_layer_label, get_scale_config, node_label, resolve_c
 from mesh_repair import repair_geometry
 from mesh_validator import find_cross_object_overlaps, validate_geometry
 from openscad_writer import build_items, write_scad
-from svg_parser import SVGParser
+from svg_parser import SVGParser, find_ruler_calibration
 
 _GEOMETRY_WARNING_MESSAGES = {
     "self_intersecting": "shape {obj} is self-intersecting (bowtie/figure-8) and will likely produce a degenerate 3D mesh.",
@@ -142,7 +142,7 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
                 module_name = "wall"
             paths_with_modules.append((module_name, subpath_list))
 
-        scale_config = get_scale_config(self.options.base_scale)
+        scale_config = self._resolve_scale_config()
         items = build_items(paths_with_modules, cx, cy)
 
         out_fname = self.options.fname.format(**{"NAME": self.basename})
@@ -157,6 +157,33 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
             inkex.errormsg(f"Unable to write file {self.options.fname}: {e}")
 
     # ----------------------------------------------------------------- helpers
+
+    def _resolve_scale_config(self):
+        """Return the scale_config to use, calibrated from the on-canvas ruler if present.
+
+        If a scale-ruler bar (see ruler.py) is present anywhere in the
+        document -- hidden or not -- its current length overrides
+        scale_config's scale_factor so the whole floor plan's real-world
+        size follows how the user has resized the ruler, rather than the
+        fixed 96dpi assumption baked into SCALE_PRESETS.
+        """
+        scale_config = get_scale_config(self.options.base_scale)
+        calibration = find_ruler_calibration(self.svg, self.docTransform)
+        if not calibration:
+            return scale_config
+
+        raw_length, real_world_mm, extra_matches = calibration
+        if raw_length <= 0:
+            inkex.errormsg("Warning: scale ruler has zero length; ignoring it and using the base scale preset instead.")
+            return scale_config
+
+        if extra_matches:
+            inkex.errormsg(f"Warning: found {extra_matches + 1} scale rulers; using the first one for calibration.")
+
+        scale_config = dict(scale_config)
+        scale_config["scale_factor"] = real_world_mm / (raw_length * scale_config["mm_per_unit"])
+        inkex.errormsg(f"Using on-canvas scale ruler for calibration: {raw_length:.2f} px = {real_world_mm:.0f} mm.")
+        return scale_config
 
     def _emit_warnings(self, warnings, auto_fix_attempted=False):
         for w in warnings:

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+  <_name>Add Scale Ruler</_name>
+  <id>org.inkscape.floorplan2openscad.add_ruler</id>
+
+  <!-- Option values below must exactly match ruler.RULER_LENGTHS keys.
+       Enforced by tests/test_floorplan_add_ruler_inx.py. -->
+  <param name="length" type="optiongroup" appearance="minimal" gui-text="Ruler length">
+    <option value="10cm">10 cm</option>
+    <option value="50cm">50 cm</option>
+    <option value="1m">1 m</option>
+    <option value="2m">2 m</option>
+    <option value="5m">5 m</option>
+  </param>
+
+  <!-- Option values below must exactly match ruler.CORNERS.
+       Enforced by tests/test_floorplan_add_ruler_inx.py. -->
+  <param name="corner" type="optiongroup" appearance="minimal" gui-text="Page corner">
+    <option value="bottom-left">Bottom left</option>
+    <option value="bottom-right">Bottom right</option>
+    <option value="top-left">Top left</option>
+    <option value="top-right">Top right</option>
+  </param>
+
+  <_param name="ruler_help" type="description">Sized against this document's actual width/height/viewBox, then dropped in as a visible, selectable bar with end ticks and a label. Drag/scale the bar (or the whole ruler layer) to match a real-world distance in your drawing -- the Semantic Floorplan to OpenSCAD conversion reads the bar's resulting length back and uses it to calibrate the whole floor plan's scale, instead of the fixed 96dpi assumption. The ruler is always excluded from the .scad output, whether visible or hidden.</_param>
+
+  <effect needs-live-preview="false">
+    <object-type>all</object-type>
+    <effects-menu>
+      <submenu _name="Floorplan"/>
+    </effects-menu>
+  </effect>
+  <script>
+    <command reldir="extensions" interpreter="python">floorplan2openscad/floorplan_add_ruler.py</command>
+  </script>
+</inkscape-extension>

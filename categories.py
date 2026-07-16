@@ -22,6 +22,7 @@ SCALE_PRESETS = {
         "floor_thickness": 5.0,
         "balcony_height": 36.6,
         "frame_width": 2.0,
+        "mm_per_unit": 30.0,
         "scale_factor": (25.4 / 96.0) / 30.0,
     },
     "1cm": {
@@ -33,6 +34,7 @@ SCALE_PRESETS = {
         "floor_thickness": 15.0,
         "balcony_height": 110.0,
         "frame_width": 6.0,
+        "mm_per_unit": 10.0,
         "scale_factor": (25.4 / 96.0) / 10.0,
     },
     "1mm": {
@@ -44,6 +46,7 @@ SCALE_PRESETS = {
         "floor_thickness": 150.0,
         "balcony_height": 1100.0,
         "frame_width": 60.0,
+        "mm_per_unit": 1.0,
         "scale_factor": (25.4 / 96.0) / 1.0,
     },
     "1m": {
@@ -55,6 +58,7 @@ SCALE_PRESETS = {
         "floor_thickness": 0.15,
         "balcony_height": 1.10,
         "frame_width": 0.06,
+        "mm_per_unit": 1000.0,
         "scale_factor": (25.4 / 96.0) / 1000.0,
     },
 }

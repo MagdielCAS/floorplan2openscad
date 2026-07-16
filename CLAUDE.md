@@ -20,7 +20,7 @@ make convert     # run the extension against an SVG (SVG=, OUT=, SCALE=)
 make validate-inx  # xmllint --noout on the .inx descriptor
 ```
 
-`categories.py`, `geometry.py`, and `openscad_writer.py` are pure Python and covered by `tests/`. `svg_parser.py` and `floorplan2openscad.py` import `inkex`, which is bundled with Inkscape rather than pip-installable, so `make convert` points `PYTHONPATH` at Inkscape's bundled `inkex` source (`INKEX_PATH`, auto-detected per OS, overridable) and installs `inkex`'s pure-pip runtime deps (numpy, lxml, Pillow, tinycss2, pyserial, cssselect — no Cairo needed) via the `inkex-runtime` dependency group. Reload after editing: in Inkscape, go to Extensions → Reload All Extensions (or restart Inkscape).
+`categories.py`, `geometry.py`, `mesh_validator.py`, `mesh_repair.py`, and `openscad_writer.py` are pure Python and covered by `tests/`. `svg_parser.py` and `floorplan2openscad.py` import `inkex`, which is bundled with Inkscape rather than pip-installable, so `make convert` points `PYTHONPATH` at Inkscape's bundled `inkex` source (`INKEX_PATH`, auto-detected per OS, overridable) and installs `inkex`'s pure-pip runtime deps (numpy, lxml, Pillow, tinycss2, pyserial, cssselect — no Cairo needed) via the `inkex-runtime` dependency group. Reload after editing: in Inkscape, go to Extensions → Reload All Extensions (or restart Inkscape).
 
 Python version is pinned to `3.12.0` via `.tool-versions` (asdf).
 

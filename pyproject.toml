@@ -34,7 +34,7 @@ testpaths = ["tests"]
 pythonpath = ["."]
 
 [tool.coverage.run]
-source = ["categories", "geometry", "mesh_validator", "openscad_writer", "svg_parser", "floorplan2openscad"]
+source = ["categories", "geometry", "mesh_repair", "mesh_validator", "openscad_writer", "svg_parser", "floorplan2openscad"]
 omit = ["tests/*"]
 
 [tool.ruff]

@@ -6,7 +6,7 @@ from geometry import bboxes_intersect, poly_in_poly
 
 _EPS = 1e-6
 _AREA_RATIO_EPS = 1e-6
-_MAX_SELF_INTERSECT_VERTICES = 500
+MAX_SELF_INTERSECT_VERTICES = 500
 
 GeometryWarning = namedtuple("GeometryWarning", ["node", "kind", "other_node"])
 # kind in {"self_intersecting", "unclosed", "degenerate", "overlap"}; other_node is None except for "overlap"
@@ -92,12 +92,15 @@ def is_degenerate(vertices, bbox=None, area_ratio_epsilon=_AREA_RATIO_EPS):
     return abs(polygon_area(vertices)) <= area_ratio_epsilon
 
 
-def polygon_self_intersects(vertices, max_vertices=_MAX_SELF_INTERSECT_VERTICES):
-    ring = vertices[:-1] if is_closed(vertices) else vertices
+def find_self_intersecting_edge_pair(ring):
+    """Return (i, j), i < j, indices of the first non-adjacent crossing edge pair in `ring`
+    (a flat, already-de-duplicated vertex list -- NOT closed with a repeated first/last point),
+    or None if none cross. Shared by polygon_self_intersects's boolean check and
+    mesh_repair.try_uncross_polygon's 2-opt uncrossing, which needs the actual offending pair
+    rather than a yes/no answer."""
     m = len(ring)
-    if m < 4 or m > max_vertices:
-        return False
-
+    if m < 4:
+        return None
     for i in range(m):
         a1, a2 = ring[i], ring[(i + 1) % m]
         for j in range(i + 1, m):
@@ -105,8 +108,15 @@ def polygon_self_intersects(vertices, max_vertices=_MAX_SELF_INTERSECT_VERTICES)
                 continue
             b1, b2 = ring[j], ring[(j + 1) % m]
             if segments_intersect(a1, a2, b1, b2):
-                return True
-    return False
+                return (i, j)
+    return None
+
+
+def polygon_self_intersects(vertices, max_vertices=MAX_SELF_INTERSECT_VERTICES):
+    ring = vertices[:-1] if is_closed(vertices) else vertices
+    if len(ring) > max_vertices:
+        return False
+    return find_self_intersecting_edge_pair(ring) is not None
 
 
 def check_subpath(vertices, bbox=None, epsilon=_EPS):

@@ -1,6 +1,7 @@
 from mesh_validator import (
     check_subpath,
     find_cross_object_overlaps,
+    find_self_intersecting_edge_pair,
     is_closed,
     is_degenerate,
     polygon_area,
@@ -96,6 +97,29 @@ def test_polygon_self_intersects_valid_square():
 
 def test_polygon_self_intersects_valid_triangle():
     assert polygon_self_intersects([[0, 0], [10, 0], [5, 10]]) is False
+
+
+# ------------------------------------------------------ find_self_intersecting_edge_pair
+
+
+def test_find_self_intersecting_edge_pair_bowtie_returns_pair():
+    bowtie = [[0, 0], [10, 10], [10, 0], [0, 10]]
+    pair = find_self_intersecting_edge_pair(bowtie)
+    assert pair is not None
+    i, j = pair
+    assert i < j
+    m = len(bowtie)
+    a1, a2 = bowtie[i], bowtie[(i + 1) % m]
+    b1, b2 = bowtie[j], bowtie[(j + 1) % m]
+    assert segments_intersect(a1, a2, b1, b2) is True
+
+
+def test_find_self_intersecting_edge_pair_valid_square_returns_none():
+    assert find_self_intersecting_edge_pair([[0, 0], [10, 0], [10, 10], [0, 10]]) is None
+
+
+def test_find_self_intersecting_edge_pair_too_few_vertices_returns_none():
+    assert find_self_intersecting_edge_pair([[0, 0], [10, 0], [5, 10]]) is None
 
 
 # ---------------------------------------------------------------- check_subpath

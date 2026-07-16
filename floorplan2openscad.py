@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import inkex
 
 from categories import find_layer_label, get_scale_config, node_label, resolve_category
+from mesh_repair import repair_geometry
 from mesh_validator import find_cross_object_overlaps, validate_geometry
 from openscad_writer import build_items, write_scad
 from svg_parser import SVGParser
@@ -26,6 +27,14 @@ _GEOMETRY_WARNING_MESSAGES = {
         "with a straight line, which may not match your intent."
     ),
     "degenerate": "shape {obj} has a near-zero-area subpath (collinear/duplicate points) and may not render.",
+}
+
+_GEOMETRY_WARNING_MESSAGES_AFTER_AUTO_FIX = {
+    "self_intersecting": (
+        "shape {obj} is still self-intersecting after auto-fix; automatic repair could only "
+        "remove crossings one at a time and gave up before finding a simple polygon. This needs "
+        "manual correction in the SVG."
+    ),
 }
 
 
@@ -79,6 +88,19 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
                 "Off by default: mitered wall corners and floor-under-wall overlap are common and harmless."
             ),
         )
+        pars.add_argument(
+            "--auto_fix",
+            dest="auto_fix",
+            type=inkex.Boolean,
+            default=False,
+            help=(
+                "Best-effort automatic repair of issues found by geometry checking: closes unclosed "
+                "subpaths, drops zero-area subpaths, and untangles simple self-intersections. Not "
+                "every issue can be fixed; anything left broken is still reported. Has no effect on "
+                "overlap warnings. Enabling this also runs and reports geometry checking even if "
+                "that checkbox is off."
+            ),
+        )
 
     def effect(self):
         self._handle_view_box()
@@ -96,8 +118,16 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
             inkex.errormsg("Warning: No valid paths or shapes found in document.")
             return
 
-        if self.options.check_geometry:
-            self._emit_warnings(validate_geometry(paths_dict))
+        if self.options.check_geometry or self.options.auto_fix:
+            warnings = validate_geometry(paths_dict)
+            auto_fix_attempted = False
+            if self.options.auto_fix and warnings:
+                auto_fix_attempted = True
+                repair_results = repair_geometry(paths_dict)
+                self._emit_repair_summary(repair_results)
+                warnings = validate_geometry(paths_dict)
+            self._emit_warnings(warnings, auto_fix_attempted=auto_fix_attempted)
+
         if self.options.check_overlap:
             self._emit_warnings(find_cross_object_overlaps(paths_dict))
 
@@ -128,7 +158,7 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
 
     # ----------------------------------------------------------------- helpers
 
-    def _emit_warnings(self, warnings):
+    def _emit_warnings(self, warnings, auto_fix_attempted=False):
         for w in warnings:
             obj = _node_descriptor(w.node)
             if w.kind == "overlap":
@@ -141,10 +171,29 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
                 )
             else:
                 key = f"{w.kind}:{obj}"
-                msg = f"Warning: {_GEOMETRY_WARNING_MESSAGES[w.kind].format(obj=obj)}"
+                messages = _GEOMETRY_WARNING_MESSAGES
+                if auto_fix_attempted and w.kind in _GEOMETRY_WARNING_MESSAGES_AFTER_AUTO_FIX:
+                    messages = _GEOMETRY_WARNING_MESSAGES_AFTER_AUTO_FIX
+                msg = f"Warning: {messages[w.kind].format(obj=obj)}"
             if key not in self._warnings_printed:
                 self._warnings_printed.add(key)
                 inkex.errormsg(msg)
+
+    def _emit_repair_summary(self, repair_results):
+        counts = {}
+        for r in repair_results:
+            if r.fixed:
+                counts[r.kind] = counts.get(r.kind, 0) + 1
+        if not counts:
+            return
+        parts = []
+        if counts.get("unclosed"):
+            parts.append(f"closed {counts['unclosed']} unclosed subpath(s)")
+        if counts.get("degenerate"):
+            parts.append(f"removed {counts['degenerate']} degenerate (near-zero-area) subpath(s)")
+        if counts.get("self_intersecting"):
+            parts.append(f"untangled {counts['self_intersecting']} self-intersecting subpath(s)")
+        inkex.errormsg(f"Auto-fix: {', '.join(parts)}.")
 
     def _handle_view_box(self):
         inkscape_version = self.svg.get("{http://www.inkscape.org/namespaces/inkscape}version")

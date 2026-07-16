@@ -21,6 +21,9 @@
   <param name="check_overlap" type="bool" gui-text="Warn about overlapping objects (non-nested overlaps between shapes)">false</param>
   <_param name="check_overlap_help" type="description">Off by default: mitered wall corners and a floor slab running under a wall edge are common, harmless overlaps.</_param>
 
+  <param name="auto_fix" type="bool" gui-text="Automatically fix geometry issues where possible (closes unclosed paths, drops zero-area shapes, untangles simple self-intersections)">false</param>
+  <_param name="auto_fix_help" type="description">Best-effort only: badly tangled self-intersections may need manual correction in the SVG. Never touches overlap warnings. Enabling this also runs and reports geometry checking even if the checkbox above is off.</_param>
+
   <effect needs-live-preview="false">
     <object-type>all</object-type>
     <effects-menu>

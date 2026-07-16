@@ -116,7 +116,7 @@ module sliding_glass_door(points, paths=[]) {
         if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
     }
     if (RENDER_DOORS) {
-        color("darkslategrey")
+        color([0.9, 0.9, 0.92])
         linear_extrude(height=DOOR_HEIGHT, convexity=10) {
             difference() {
                 if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
@@ -158,7 +158,9 @@ module window_standard(points, paths=[]) {
         color([0.5, 0.8, 1.0, 0.3])
         translate([0, 0, WINDOW_SILL])
         linear_extrude(height=WINDOW_HEADER - WINDOW_SILL, convexity=10) {
-            if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
+            offset(delta = -FRAME_WIDTH) {
+                if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
+            }
         }
     }
 }

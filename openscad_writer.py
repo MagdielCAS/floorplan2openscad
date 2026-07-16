@@ -8,7 +8,7 @@ _PARAMETERS_TEMPLATE = """\
 // Generated from SVG floor plan "{basename}.svg" at {timestamp}
 // Base Z-Scale: {desc}
 
-BASE_Z_SCALE = 80;
+BASE_Z_SCALE = 1;
 WALL_HEIGHT      = {wall_height:.2f}/80 * BASE_Z_SCALE;  // Standard ceiling height (2.40m)
 DOOR_HEIGHT      = {door_height:.2f}/80 * BASE_Z_SCALE;  // Standard door clearance (2.00m)
 WINDOW_HEADER    = {window_header:.2f}/80 * BASE_Z_SCALE;  // Top of the window frame (2.10m)

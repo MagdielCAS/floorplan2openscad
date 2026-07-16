@@ -44,7 +44,7 @@ The extension is two files:
 4. **Category matching** (`get_category_for_node`) — checks the node's `id` and `inkscape:label` attributes (and then walks up to parent groups/layers) against the `CATEGORIES` dict prefix table. Unmatched objects fall back to the generic `wall` module and emit a warning.
 
 5. **OpenSCAD output** — writes a single `.scad` file in three sections:
-   - Global parametric variables (`WALL_HEIGHT`, `DOOR_HEIGHT`, `WINDOW_SILL`, etc.) expressed as ratios of `BASE_Z_SCALE=80` so the user can tweak one number.
+   - Global parametric variables (`WALL_HEIGHT`, `DOOR_HEIGHT`, `WINDOW_SILL`, etc.) expressed as ratios of `BASE_Z_SCALE=1` so the user can tweak one number.
    - Inline module definitions for all semantic types (wall, wall_outer, wall_inner, wall_balcony, floor_slab, door_wood, door_glass, sliding_glass_door, window_standard, wardrobe).
    - Coordinate arrays and `union() { apply_svg_scale() { ... } }` call block.
 

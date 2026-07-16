@@ -84,7 +84,7 @@ def test_write_scad_contains_basename():
 def test_write_scad_contains_base_z_scale():
     items = build_items([("floor_slab", _make_path([[0, 0], [10, 0], [10, 10], [0, 10]]))], cx=5, cy=5)
     output = _write_to_string(items)
-    assert "BASE_Z_SCALE = 80;" in output
+    assert "BASE_Z_SCALE = 1;" in output
 
 
 def test_write_scad_contains_all_global_vars():

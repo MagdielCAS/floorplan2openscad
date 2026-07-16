@@ -8,16 +8,23 @@ An Inkscape extension (Python 3.12) that converts 2D SVG floor plans into parame
 
 ## Running and testing
 
-There is no test suite or build step. The extension runs inside Inkscape or can be invoked directly with a test SVG:
+Dependencies and dev tooling are managed with `uv`. Common tasks are wrapped in the `Makefile`:
 
 ```bash
-# Run against a test SVG file (Inkscape must be installed; inkex must be on PYTHONPATH)
-python floorplan2openscad.py --fname=/tmp/test.scad --base_scale=3cm < test.svg
-
-# Reload after editing: in Inkscape, go to Extensions → Reload All Extensions (or restart Inkscape)
+make install     # uv sync --group dev
+make test        # pytest
+make coverage    # pytest with term + html coverage report
+make lint        # ruff check
+make format      # ruff format
+make convert     # run the extension against an SVG (SVG=, OUT=, SCALE=)
+make validate-inx  # xmllint --noout on the .inx descriptor
 ```
 
+`categories.py`, `geometry.py`, and `openscad_writer.py` are pure Python and covered by `tests/`. `svg_parser.py` and `floorplan2openscad.py` import `inkex`, which is bundled with Inkscape rather than pip-installable, so `make convert` points `PYTHONPATH` at Inkscape's bundled `inkex` source (`INKEX_PATH`, auto-detected per OS, overridable) and installs `inkex`'s pure-pip runtime deps (numpy, lxml, Pillow, tinycss2, pyserial, cssselect — no Cairo needed) via the `inkex-runtime` dependency group. Reload after editing: in Inkscape, go to Extensions → Reload All Extensions (or restart Inkscape).
+
 Python version is pinned to `3.12.0` via `.tool-versions` (asdf).
+
+Pre-commit hooks (`.pre-commit-config.yaml`) run ruff lint/format, INX well-formedness, and the test suite before each commit — install with `uv run pre-commit install`. CI (`.github/workflows/ci.yml`) runs the same checks plus an end-to-end SVG→OpenSCAD smoke test on Ubuntu with Inkscape installed via apt. Tagging a commit `vX.Y.Z` (matching the `version` in `pyproject.toml`) triggers `.github/workflows/release.yml`, which packages the extension into a `floorplan2openscad/` zip and publishes it as a GitHub release.
 
 ## Architecture
 

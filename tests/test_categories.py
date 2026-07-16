@@ -1,4 +1,5 @@
 import pytest
+
 from categories import (
     CATEGORIES,
     SCALE_PRESETS,
@@ -12,70 +13,86 @@ from categories import (
 
 def test_categories_has_expected_prefixes():
     expected = {
-        'floor_', 'wall_outer_', 'wall_inner_', 'wall_balcony_',
-        'door_wood_', 'door_glass_', 'sliding_door_',
-        'window_standard_', 'wardrobe_',
+        "floor_",
+        "wall_outer_",
+        "wall_inner_",
+        "wall_balcony_",
+        "door_wood_",
+        "door_glass_",
+        "sliding_door_",
+        "window_standard_",
+        "wardrobe_",
     }
     assert set(CATEGORIES.keys()) == expected
 
 
 def test_categories_maps_to_module_names():
-    assert CATEGORIES['wall_outer_'] == 'wall_outer'
-    assert CATEGORIES['floor_'] == 'floor_slab'
-    assert CATEGORIES['sliding_door_'] == 'sliding_glass_door'
+    assert CATEGORIES["wall_outer_"] == "wall_outer"
+    assert CATEGORIES["floor_"] == "floor_slab"
+    assert CATEGORIES["sliding_door_"] == "sliding_glass_door"
 
 
 # ---------------------------------------------------------------- SCALE_PRESETS
 
 
 _REQUIRED_KEYS = {
-    'desc', 'wall_height', 'door_height', 'window_header', 'window_sill',
-    'floor_thickness', 'balcony_height', 'frame_width', 'scale_factor',
+    "desc",
+    "wall_height",
+    "door_height",
+    "window_header",
+    "window_sill",
+    "floor_thickness",
+    "balcony_height",
+    "frame_width",
+    "scale_factor",
 }
 
 
-@pytest.mark.parametrize("scale", ['3cm', '1cm', '1mm', '1m'])
+@pytest.mark.parametrize("scale", ["3cm", "1cm", "1mm", "1m"])
 def test_scale_presets_have_required_keys(scale):
     assert _REQUIRED_KEYS <= set(SCALE_PRESETS[scale].keys())
 
 
 def test_scale_preset_3cm_ceiling():
-    cfg = SCALE_PRESETS['3cm']
-    assert cfg['wall_height'] == pytest.approx(80.0)
+    cfg = SCALE_PRESETS["3cm"]
+    assert cfg["wall_height"] == pytest.approx(80.0)
 
 
 def test_scale_preset_1m_ceiling():
-    cfg = SCALE_PRESETS['1m']
-    assert cfg['wall_height'] == pytest.approx(2.4)
+    cfg = SCALE_PRESETS["1m"]
+    assert cfg["wall_height"] == pytest.approx(2.4)
 
 
 # ---------------------------------------------------------------- get_scale_config
 
 
 def test_get_scale_config_valid():
-    cfg = get_scale_config('1cm')
-    assert cfg['wall_height'] == pytest.approx(240.0)
+    cfg = get_scale_config("1cm")
+    assert cfg["wall_height"] == pytest.approx(240.0)
 
 
 def test_get_scale_config_unknown_falls_back_to_3cm():
-    cfg = get_scale_config('unknown_unit')
-    assert cfg == SCALE_PRESETS['3cm']
+    cfg = get_scale_config("unknown_unit")
+    assert cfg == SCALE_PRESETS["3cm"]
 
 
 # ---------------------------------------------------------------- match_category
 
 
-@pytest.mark.parametrize("label,expected_module", [
-    ("wall_outer_north",    "wall_outer"),
-    ("wall_inner_corridor", "wall_inner"),
-    ("wall_balcony_west",   "wall_balcony"),
-    ("floor_ground",        "floor_slab"),
-    ("door_wood_entrance",  "door_wood"),
-    ("door_glass_terrace",  "door_glass"),
-    ("sliding_door_living", "sliding_glass_door"),
-    ("window_standard_s",   "window_standard"),
-    ("wardrobe_bedroom",    "wardrobe"),
-])
+@pytest.mark.parametrize(
+    "label,expected_module",
+    [
+        ("wall_outer_north", "wall_outer"),
+        ("wall_inner_corridor", "wall_inner"),
+        ("wall_balcony_west", "wall_balcony"),
+        ("floor_ground", "floor_slab"),
+        ("door_wood_entrance", "door_wood"),
+        ("door_glass_terrace", "door_glass"),
+        ("sliding_door_living", "sliding_glass_door"),
+        ("window_standard_s", "window_standard"),
+        ("wardrobe_bedroom", "wardrobe"),
+    ],
+)
 def test_match_category_known_prefixes(label, expected_module):
     _, module_name = match_category(label)
     assert module_name == expected_module
@@ -121,30 +138,30 @@ class _MockNode:
         return self._parent
 
 
-_INKSCAPE_LABEL = '{http://www.inkscape.org/namespaces/inkscape}label'
+_INKSCAPE_LABEL = "{http://www.inkscape.org/namespaces/inkscape}label"
 
 
 def test_resolve_category_by_id():
-    node = _MockNode({'id': 'wall_inner_hall'})
+    node = _MockNode({"id": "wall_inner_hall"})
     _, module_name = resolve_category(node)
-    assert module_name == 'wall_inner'
+    assert module_name == "wall_inner"
 
 
 def test_resolve_category_by_inkscape_label():
-    node = _MockNode({_INKSCAPE_LABEL: 'floor_slab_level1'})
+    node = _MockNode({_INKSCAPE_LABEL: "floor_slab_level1"})
     _, module_name = resolve_category(node)
-    assert module_name == 'floor_slab'
+    assert module_name == "floor_slab"
 
 
 def test_resolve_category_falls_back_to_parent():
-    parent = _MockNode({_INKSCAPE_LABEL: 'window_standard_south'})
-    child = _MockNode({'id': 'rect42'}, parent=parent)
+    parent = _MockNode({_INKSCAPE_LABEL: "window_standard_south"})
+    child = _MockNode({"id": "rect42"}, parent=parent)
     _, module_name = resolve_category(child)
-    assert module_name == 'window_standard'
+    assert module_name == "window_standard"
 
 
 def test_resolve_category_no_match_returns_none():
-    node = _MockNode({'id': 'furniture_chair'})
+    node = _MockNode({"id": "furniture_chair"})
     prefix, module_name = resolve_category(node)
     assert prefix is None
     assert module_name is None

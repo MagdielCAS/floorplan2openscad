@@ -1,4 +1,5 @@
 import pytest
+
 from geometry import (
     bbox_in_bbox,
     format_paths,
@@ -110,15 +111,18 @@ def test_format_paths_basic():
 # ------------------------------------------------------- parse_length_with_units
 
 
-@pytest.mark.parametrize("val,expected_v,expected_u", [
-    ("100px", 100.0, "px"),
-    ("25.4mm", 25.4, "mm"),
-    ("2.54cm", 2.54, "cm"),
-    ("1in", 1.0, "in"),
-    ("1m",  1.0, "m"),
-    ("50%", 50.0, "%"),
-    ("72pt", 72.0, "pt"),
-])
+@pytest.mark.parametrize(
+    "val,expected_v,expected_u",
+    [
+        ("100px", 100.0, "px"),
+        ("25.4mm", 25.4, "mm"),
+        ("2.54cm", 2.54, "cm"),
+        ("1in", 1.0, "in"),
+        ("1m", 1.0, "m"),
+        ("50%", 50.0, "%"),
+        ("72pt", 72.0, "pt"),
+    ],
+)
 def test_parse_length_with_units(val, expected_v, expected_u):
     v, u = parse_length_with_units(val)
     assert v == pytest.approx(expected_v)

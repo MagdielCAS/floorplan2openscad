@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: uv sync --group dev
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+      - run: xmllint --noout floorplan2openscad.inx
+      - run: uv run pytest
+
+  build-release:
+    name: Build and publish release
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag matches pyproject.toml version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PROJECT_VERSION="$(grep -m1 '^version' pyproject.toml | sed -E 's/version = "(.*)"/\1/')"
+          if [ "$TAG_VERSION" != "$PROJECT_VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match pyproject.toml version $PROJECT_VERSION"
+            exit 1
+          fi
+
+      - name: Package extension
+        run: |
+          STAGE_DIR="$(mktemp -d)/floorplan2openscad"
+          mkdir -p "$STAGE_DIR"
+          cp floorplan2openscad.inx floorplan2openscad.py categories.py geometry.py \
+             openscad_writer.py svg_parser.py LICENSE README.md "$STAGE_DIR/"
+          (cd "$(dirname "$STAGE_DIR")" && zip -r "$GITHUB_WORKSPACE/floorplan2openscad-${GITHUB_REF_NAME}.zip" floorplan2openscad)
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: floorplan2openscad-${{ github.ref_name }}.zip
+          generate_release_notes: true

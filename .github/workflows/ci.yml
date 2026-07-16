@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: uv sync --group dev
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+
+  validate-inx:
+    name: Validate INX descriptor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+      - run: xmllint --noout floorplan2openscad.inx
+
+  test:
+    name: Test + coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: uv sync --group dev
+      - run: uv run pytest --cov --cov-report=term-missing --cov-report=xml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  smoke-convert:
+    name: End-to-end SVG to OpenSCAD smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: sudo apt-get update && sudo apt-get install -y inkscape
+      - run: uv sync --group inkex-runtime
+      - name: Convert example floor plan
+        run: |
+          PYTHONPATH="/usr/share/inkscape/extensions" uv run --group inkex-runtime python floorplan2openscad.py \
+            --fname=/tmp/smoke.scad --base_scale=3cm < examples/simple_room.svg
+      - name: Verify output was written
+        run: |
+          test -s /tmp/smoke.scad
+          grep -q "BASE_Z_SCALE" /tmp/smoke.scad

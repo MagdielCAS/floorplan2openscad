@@ -2,7 +2,7 @@
 
 import time
 
-from geometry import format_points, format_paths, poly_in_poly
+from geometry import format_paths, format_points, poly_in_poly
 
 _PARAMETERS_TEMPLATE = """\
 // Generated from SVG floor plan "{basename}.svg" at {timestamp}
@@ -227,33 +227,37 @@ def build_items(paths_with_modules, cx, cy):
                     polypaths.append(inner_indices)
 
             suffix = f"_{i}" if n > 1 else ""
-            items.append({
-                'module_name': module_name,
-                'var_name': f"{var_base}{suffix}",
-                'points': polypoints,
-                'polypaths': polypaths,
-            })
+            items.append(
+                {
+                    "module_name": module_name,
+                    "var_name": f"{var_base}{suffix}",
+                    "points": polypoints,
+                    "polypaths": polypaths,
+                }
+            )
 
     return items
 
 
 def write_scad(f, basename, items, scale_config):
     """Write a complete .scad file to the open file object f."""
-    f.write(_PARAMETERS_TEMPLATE.format(
-        basename=basename,
-        timestamp=time.ctime(),
-        **scale_config,
-    ))
+    f.write(
+        _PARAMETERS_TEMPLATE.format(
+            basename=basename,
+            timestamp=time.ctime(),
+            **scale_config,
+        )
+    )
     f.write(_MODULES)
     f.write("/* --- Data Extraction & Coordinates --- */\n\n")
     for item in items:
         f.write(f"{item['var_name']}_points = {format_points(item['points'])};\n")
-        if item['polypaths']:
+        if item["polypaths"]:
             f.write(f"{item['var_name']}_paths = {format_paths(item['polypaths'])};\n")
     f.write("\n/* --- Execution Set --- */\n\n")
     f.write("union() {\n    apply_svg_scale() {\n")
     for item in items:
-        if item['polypaths']:
+        if item["polypaths"]:
             f.write(f"        {item['module_name']}({item['var_name']}_points, {item['var_name']}_paths);\n")
         else:
             f.write(f"        {item['module_name']}({item['var_name']}_points);\n")

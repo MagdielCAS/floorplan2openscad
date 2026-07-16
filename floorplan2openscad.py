@@ -31,14 +31,20 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
 
     def add_arguments(self, pars):
         pars.add_argument(
-            '--fname', dest='fname', type=str, default='{NAME}.scad',
-            help='OpenSCAD output file (use {NAME} to mirror the SVG filename).')
+            "--fname",
+            dest="fname",
+            type=str,
+            default="{NAME}.scad",
+            help="OpenSCAD output file (use {NAME} to mirror the SVG filename).",
+        )
+        pars.add_argument("--base_scale", dest="base_scale", type=str, default="3cm", help="Scale factor: 3cm, 1cm, 1mm, or 1m.")
         pars.add_argument(
-            '--base_scale', dest='base_scale', type=str, default='3cm',
-            help='Scale factor: 3cm, 1cm, 1mm, or 1m.')
-        pars.add_argument(
-            '--smoothness', dest='smoothness', type=float, default=0.2,
-            help='Bezier curve smoothing tolerance (smaller = smoother).')
+            "--smoothness",
+            dest="smoothness",
+            type=float,
+            default=0.2,
+            help="Bezier curve smoothing tolerance (smaller = smoother).",
+        )
 
     def effect(self):
         self._handle_view_box()
@@ -60,23 +66,23 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
         for node, subpath_list in paths_dict.items():
             _, module_name = resolve_category(node)
             if not module_name:
-                name = node.get('{http://www.inkscape.org/namespaces/inkscape}label') or node.get('id', 'unnamed')
+                name = node.get("{http://www.inkscape.org/namespaces/inkscape}label") or node.get("id", "unnamed")
                 if name not in self._warnings_printed:
                     inkex.errormsg(f"Warning: Object '{name}' did not match any category prefix. Falling back to 'wall'.")
                     self._warnings_printed.add(name)
-                module_name = 'wall'
+                module_name = "wall"
             paths_with_modules.append((module_name, subpath_list))
 
         scale_config = get_scale_config(self.options.base_scale)
         items = build_items(paths_with_modules, cx, cy)
 
-        out_fname = self.options.fname.format(**{'NAME': self.basename})
-        if not os.path.isabs(out_fname) and 'PWD' in os.environ:
-            out_fname = os.path.join(os.environ['PWD'], out_fname)
+        out_fname = self.options.fname.format(**{"NAME": self.basename})
+        if not os.path.isabs(out_fname) and "PWD" in os.environ:
+            out_fname = os.path.join(os.environ["PWD"], out_fname)
         scad_fname = os.path.expanduser(out_fname)
 
         try:
-            with open(scad_fname, 'w') as f:
+            with open(scad_fname, "w") as f:
                 write_scad(f, self.basename, items, scale_config)
         except IOError as e:
             inkex.errormsg(f"Unable to write file {self.options.fname}: {e}")
@@ -88,9 +94,7 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
         sodipodi_docname = self.svg.get("{http://sodipodi.sourceforge.net/DTD/sodipodi-0.0.dtd}docname")
         if sodipodi_docname is None:
             sodipodi_docname = "floorplan"
-        self.basename = os.path.splitext(os.path.basename(
-            re.sub(r"\.SVG", "", sodipodi_docname, flags=re.I)
-        ))[0]
+        self.basename = os.path.splitext(os.path.basename(re.sub(r"\.SVG", "", sodipodi_docname, flags=re.I)))[0]
 
         if inkscape_version:
             m = re.match(r"(\d+)\.(\d+)", inkscape_version)
@@ -99,24 +103,24 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
 
         parser = SVGParser()
         parser.dpi = self.dpi
-        self.docHeight = parser.length_to_px(self.svg.get('height', '100'))
-        self.docWidth = parser.length_to_px(self.svg.get('width', '100'))
+        self.docHeight = parser.length_to_px(self.svg.get("height", "100"))
+        self.docWidth = parser.length_to_px(self.svg.get("width", "100"))
 
         if self.docHeight is None:
             self.docHeight = 100.0
         if self.docWidth is None:
             self.docWidth = 100.0
 
-        viewbox = self.svg.get('viewBox')
+        viewbox = self.svg.get("viewBox")
         if viewbox:
-            vinfo = viewbox.strip().replace(',', ' ').split()
+            vinfo = viewbox.strip().replace(",", " ").split()
             if len(vinfo) >= 4 and float(vinfo[2]) != 0 and float(vinfo[3]) != 0:
                 sx = self.docWidth / float(vinfo[2])
                 sy = self.docHeight / float(vinfo[3])
-                self.docTransform = inkex.Transform(f'scale({sx},{sy})')
+                self.docTransform = inkex.Transform(f"scale({sx},{sy})")
                 return
         self.docTransform = inkex.Transform()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     FloorplanToOpenSCAD().run()

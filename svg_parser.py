@@ -52,70 +52,69 @@ class SVGParser:
         cy = self._ymin + (self._ymax - self._ymin) / 2.0
         return dict(self._paths), cx, cy
 
-    def length_to_px(self, str_val, default_unit='px'):
+    def length_to_px(self, str_val, default_unit="px"):
         v, u = parse_length_with_units(str_val, default_unit)
         if v is None:
             return None
         conversions = {
-            'mm': self.dpi / 25.4,
-            'cm': self.dpi * 10.0 / 25.4,
-            'm':  self.dpi * 1000.0 / 25.4,
-            'in': self.dpi,
-            'ft': 12.0 * self.dpi,
-            'pt': self.dpi / 72.0,
-            'pc': self.dpi / 6.0,
-            'px': 1.0,
+            "mm": self.dpi / 25.4,
+            "cm": self.dpi * 10.0 / 25.4,
+            "m": self.dpi * 1000.0 / 25.4,
+            "in": self.dpi,
+            "ft": 12.0 * self.dpi,
+            "pt": self.dpi / 72.0,
+            "pc": self.dpi / 6.0,
+            "px": 1.0,
         }
         return float(v) * conversions.get(u, 1.0)
 
     # ----------------------------------------------------------------- private
 
-    def _traverse(self, node_list, mat_current=None, parent_visibility='visible'):
+    def _traverse(self, node_list, mat_current=None, parent_visibility="visible"):
         if mat_current is None:
             mat_current = inkex.Transform()
 
         for node in node_list:
-            v = node.get('visibility', parent_visibility)
-            if v == 'inherit':
+            v = node.get("visibility", parent_visibility)
+            if v == "inherit":
                 v = parent_visibility
-            if v in ('hidden', 'collapse'):
+            if v in ("hidden", "collapse"):
                 continue
-            if node.get('style', '') == 'display:none':
+            if node.get("style", "") == "display:none":
                 continue
 
-            mat_new = mat_current @ inkex.Transform(node.get('transform'))
+            mat_new = mat_current @ inkex.Transform(node.get("transform"))
             tag = node.tag
 
-            if tag in (inkex.addNS('g', 'svg'), 'g'):
+            if tag in (inkex.addNS("g", "svg"), "g"):
                 self._traverse(node, mat_new, v)
-            elif tag in (inkex.addNS('use', 'svg'), 'use'):
+            elif tag in (inkex.addNS("use", "svg"), "use"):
                 self._handle_use(node, mat_new, v)
-            elif tag == inkex.addNS('path', 'svg'):
-                d = node.get('d')
+            elif tag == inkex.addNS("path", "svg"):
+                d = node.get("d")
                 if d:
                     self._extract_vertices(d, node, mat_new)
-            elif tag in (inkex.addNS('rect', 'svg'), 'rect'):
+            elif tag in (inkex.addNS("rect", "svg"), "rect"):
                 self._extract_vertices(self._rect_to_path(node), node, mat_new)
-            elif tag in (inkex.addNS('line', 'svg'), 'line'):
+            elif tag in (inkex.addNS("line", "svg"), "line"):
                 self._extract_vertices(self._line_to_path(node), node, mat_new)
-            elif tag in (inkex.addNS('polyline', 'svg'), 'polyline'):
+            elif tag in (inkex.addNS("polyline", "svg"), "polyline"):
                 self._extract_vertices(self._polyline_to_path(node), node, mat_new)
-            elif tag in (inkex.addNS('polygon', 'svg'), 'polygon'):
+            elif tag in (inkex.addNS("polygon", "svg"), "polygon"):
                 self._extract_vertices(self._polygon_to_path(node), node, mat_new)
-            elif tag in (inkex.addNS('ellipse', 'svg'), 'ellipse',
-                         inkex.addNS('circle', 'svg'), 'circle'):
+            elif tag in (inkex.addNS("ellipse", "svg"), "ellipse", inkex.addNS("circle", "svg"), "circle"):
                 self._extract_vertices(self._ellipse_to_path(node), node, mat_new)
 
     def _handle_use(self, node, mat_new, v):
-        refid = node.get(inkex.addNS('href', 'xlink'))
+        refid = node.get(inkex.addNS("href", "xlink"))
         if not refid:
             return
         refnode = node.xpath('//*[@id="%s"]' % refid[1:])
         if not refnode:
             return
-        x, y = float(node.get('x', '0')), float(node.get('y', '0'))
-        mat = mat_new @ inkex.Transform(f'translate({x},{y})') if (x or y) else mat_new
-        self._traverse(refnode, mat, node.get('visibility', v))
+        x, y = float(node.get("x", "0")), float(node.get("y", "0"))
+        mat = mat_new @ inkex.Transform(f"translate({x},{y})") if (x or y) else mat_new
+        self._traverse(refnode, mat, node.get("visibility", v))
 
     def _extract_vertices(self, path_str, node, transform):
         if not path_str:
@@ -166,45 +165,47 @@ class SVGParser:
 
     @staticmethod
     def _rect_to_path(node):
-        x = float(node.get('x', '0'))
-        y = float(node.get('y', '0'))
-        w = float(node.get('width', '0'))
-        h = float(node.get('height', '0'))
-        return str(inkex.paths.Path([
-            ['M', [x, y]], ['l', [w, 0]], ['l', [0, h]], ['l', [-w, 0]], ['Z', []]
-        ]))
+        x = float(node.get("x", "0"))
+        y = float(node.get("y", "0"))
+        w = float(node.get("width", "0"))
+        h = float(node.get("height", "0"))
+        return str(inkex.paths.Path([["M", [x, y]], ["l", [w, 0]], ["l", [0, h]], ["l", [-w, 0]], ["Z", []]]))
 
     @staticmethod
     def _line_to_path(node):
-        return str(inkex.paths.Path([
-            ['M', [float(node.get('x1', '0')), float(node.get('y1', '0'))]],
-            ['L', [float(node.get('x2', '0')), float(node.get('y2', '0'))]]
-        ]))
+        return str(
+            inkex.paths.Path(
+                [
+                    ["M", [float(node.get("x1", "0")), float(node.get("y1", "0"))]],
+                    ["L", [float(node.get("x2", "0")), float(node.get("y2", "0"))]],
+                ]
+            )
+        )
 
     @staticmethod
     def _polyline_to_path(node):
-        pa = node.get('points', '').strip().split()
+        pa = node.get("points", "").strip().split()
         if not pa:
             return None
-        return ''.join(('M ' if i == 0 else ' L ') + pa[i] for i in range(len(pa)))
+        return "".join(("M " if i == 0 else " L ") + pa[i] for i in range(len(pa)))
 
     @staticmethod
     def _polygon_to_path(node):
-        pa = node.get('points', '').strip().split()
+        pa = node.get("points", "").strip().split()
         if not pa:
             return None
-        return ''.join(('M ' if i == 0 else ' L ') + pa[i] for i in range(len(pa))) + ' Z'
+        return "".join(("M " if i == 0 else " L ") + pa[i] for i in range(len(pa))) + " Z"
 
     @staticmethod
     def _ellipse_to_path(node):
-        if node.tag in (inkex.addNS('circle', 'svg'), 'circle'):
-            rx = ry = float(node.get('r', '0'))
+        if node.tag in (inkex.addNS("circle", "svg"), "circle"):
+            rx = ry = float(node.get("r", "0"))
         else:
-            rx = float(node.get('rx', '0'))
-            ry = float(node.get('ry', '0'))
+            rx = float(node.get("rx", "0"))
+            ry = float(node.get("ry", "0"))
         if not rx or not ry:
             return None
-        cx = float(node.get('cx', '0'))
-        cy = float(node.get('cy', '0'))
+        cx = float(node.get("cx", "0"))
+        cy = float(node.get("cy", "0"))
         x1, x2 = cx - rx, cx + rx
-        return f'M {x1},{cy} A {rx},{ry} 0 1 0 {x2},{cy} A {rx},{ry} 0 1 0 {x1},{cy}'
+        return f"M {x1},{cy} A {rx},{ry} 0 1 0 {x2},{cy} A {rx},{ry} 0 1 0 {x1},{cy}"

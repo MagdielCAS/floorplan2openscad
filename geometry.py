@@ -1,12 +1,12 @@
 """Pure-Python 2D geometry utilities. No inkex dependency."""
 
 
-def parse_length_with_units(str_val, default_unit='px'):
+def parse_length_with_units(str_val, default_unit="px"):
     u = default_unit
     s = str_val.strip()
-    if s[-2:] in ('px', 'pt', 'pc', 'mm', 'cm', 'in', 'ft'):
+    if s[-2:] in ("px", "pt", "pc", "mm", "cm", "in", "ft"):
         u, s = s[-2:], s[:-2]
-    elif s[-1:] in ('m', '%'):
+    elif s[-1:] in ("m", "%"):
         u, s = s[-1:], s[:-1]
     try:
         return float(s), u

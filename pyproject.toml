@@ -12,11 +12,37 @@ dependencies = []
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
+    "ruff>=0.8",
+    "pre-commit>=4.0",
+]
+# The `inkex` package itself still can't be pip-installed (see note above),
+# but its runtime imports (numpy, lxml, Pillow, tinycss2, pyserial,
+# cssselect) are pure-pip and don't need Cairo. Installing this group lets
+# `make convert` run floorplan2openscad.py with `PYTHONPATH` pointed at
+# Inkscape's bundled `inkex` source instead of Inkscape's own interpreter.
+inkex-runtime = [
+    "numpy",
+    "lxml",
+    "pillow",
+    "tinycss2",
+    "pyserial",
+    "cssselect",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["categories", "geometry", "openscad_writer", "svg_parser", "floorplan2openscad"]
+omit = ["tests/*"]
+
+[tool.ruff]
+line-length = 130
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
 
 [build-system]
 requires = ["hatchling"]

@@ -18,6 +18,7 @@ from categories import find_layer_label, get_scale_config, node_label, resolve_c
 from mesh_repair import repair_geometry
 from mesh_validator import find_cross_object_overlaps, validate_geometry
 from openscad_writer import build_items, write_scad
+from output_paths import category_output_path, resolve_output_path
 from svg_parser import SVGParser, find_ruler_calibration
 
 _GEOMETRY_WARNING_MESSAGES = {
@@ -101,6 +102,13 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
                 "that checkbox is off."
             ),
         )
+        pars.add_argument(
+            "--split_by_category",
+            dest="split_by_category",
+            type=inkex.Boolean,
+            default=False,
+            help="Write one '{NAME}_<category>.scad' file per semantic category instead of one combined file.",
+        )
 
     def effect(self):
         self._handle_view_box()
@@ -145,16 +153,27 @@ class FloorplanToOpenSCAD(inkex.EffectExtension):
         scale_config = self._resolve_scale_config()
         items = build_items(paths_with_modules, cx, cy)
 
-        out_fname = self.options.fname.format(**{"NAME": self.basename})
-        if not os.path.isabs(out_fname) and "PWD" in os.environ:
-            out_fname = os.path.join(os.environ["PWD"], out_fname)
-        scad_fname = os.path.expanduser(out_fname)
+        scad_fname = resolve_output_path(self.options.fname, self.basename, os.environ)
 
-        try:
-            with open(scad_fname, "w") as f:
-                write_scad(f, self.basename, items, scale_config)
-        except IOError as e:
-            inkex.errormsg(f"Unable to write file {self.options.fname}: {e}")
+        if not self.options.split_by_category:
+            try:
+                with open(scad_fname, "w") as f:
+                    write_scad(f, self.basename, items, scale_config)
+            except IOError as e:
+                inkex.errormsg(f"Unable to write file {scad_fname}: {e}")
+            return
+
+        items_by_category = {}
+        for item in items:
+            items_by_category.setdefault(item["module_name"], []).append(item)
+
+        for category in sorted(items_by_category):
+            category_fname = category_output_path(scad_fname, category)
+            try:
+                with open(category_fname, "w") as f:
+                    write_scad(f, self.basename, items_by_category[category], scale_config, module_names={category})
+            except IOError as e:
+                inkex.errormsg(f"Unable to write file {category_fname}: {e}")
 
     # ----------------------------------------------------------------- helpers
 

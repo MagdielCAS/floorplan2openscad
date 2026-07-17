@@ -7,6 +7,9 @@
   <param name="fname" type="string" gui-text="Output File">~/Downloads/{NAME}.scad</param>
   <_param name="fname_help" type="description">Use '{NAME}.scad' to match the SVG filename.</_param>
 
+  <param name="split_by_category" type="bool" gui-text="Export a separate .scad file per category">false</param>
+  <_param name="split_by_category_help" type="description">Writes one '{NAME}_&lt;category&gt;.scad' file per semantic category (walls, doors, windows, floor, wardrobe) instead of one combined file. Useful when importing into FreeCAD or other CAD/BIM tools that treat a single .scad as one opaque object.</_param>
+
   <param name="base_scale" type="optiongroup" appearance="minimal" gui-text="Base Scale (1 unit = )">
     <option value="3cm">3 cm (Architectural: 80 units = 2.40m ceiling)</option>
     <option value="1cm">1 cm (240 units = 2.40m ceiling)</option>
@@ -27,7 +30,7 @@
   <effect needs-live-preview="false">
     <object-type>all</object-type>
     <effects-menu>
-      <submenu _name="Generate from Path"/>
+      <submenu _name="Floorplan"/>
     </effects-menu>
   </effect>
   <script>

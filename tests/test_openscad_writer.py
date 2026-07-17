@@ -68,9 +68,9 @@ def test_build_items_sequential_var_names():
 # ---------------------------------------------------------------- write_scad
 
 
-def _write_to_string(items, scale_key="3cm", basename="test"):
+def _write_to_string(items, scale_key="3cm", basename="test", module_names=None):
     buf = io.StringIO()
-    write_scad(buf, basename, items, get_scale_config(scale_key))
+    write_scad(buf, basename, items, get_scale_config(scale_key), module_names=module_names)
     return buf.getvalue()
 
 
@@ -151,3 +151,24 @@ def test_write_scad_ends_with_closing_brace():
     items = build_items([("wall_outer", _make_path([[0, 0], [5, 0], [5, 5], [0, 5]]))], cx=2.5, cy=2.5)
     output = _write_to_string(items)
     assert output.rstrip().endswith("}")
+
+
+def test_write_scad_module_names_filters_to_selected_module():
+    items = build_items([("wall_outer", _make_path([[0, 0], [5, 0], [5, 5], [0, 5]]))], cx=2.5, cy=2.5)
+    output = _write_to_string(items, module_names={"wall_outer"})
+    assert "module wall_outer(" in output
+    for mod in ("module wall(", "module door_wood(", "module window_standard(", "module wardrobe("):
+        assert mod not in output, f"Unexpected module definition present: {mod}"
+
+
+def test_write_scad_module_names_none_includes_everything():
+    output = _write_to_string([], module_names=None)
+    for mod in (
+        "module wall(",
+        "module wall_outer(",
+        "module floor_slab(",
+        "module door_wood(",
+        "module window_standard(",
+        "module wardrobe(",
+    ):
+        assert mod in output, f"Missing module definition: {mod}"

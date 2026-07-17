@@ -14,6 +14,7 @@ Unlike general path-to-OpenSCAD converters, this extension is **semantic**. It r
 - **Hole and Subpath Support**: Correctly renders nested paths (such as walls with inner cutouts or donut slabs) as OpenSCAD polygons with hole indexes.
 - **Comprehensive Transform Support**: Parses paths, rectangles, circles, ellipses, lines, polylines, and polygons, automatically applying cumulative group transforms.
 - **On-Canvas Scale Calibration**: A helper extension drops a resizable "1 m" reference bar into a corner of the canvas. Drag it to match a known real-world distance in your drawing, and the conversion automatically calibrates the whole floor plan's scale from the bar's resulting length — instead of relying on the fixed 96dpi assumption. The ruler itself is never rendered in the `.scad` output.
+- **Per-Category File Export**: Optionally write one `.scad` file per semantic category (`{NAME}_wall_outer.scad`, `{NAME}_door_wood.scad`, etc.) instead of a single combined file, so each category can be imported separately into tools like FreeCAD that otherwise treat a `.scad` file's `union()` as one opaque object.
 
 ---
 
@@ -72,7 +73,7 @@ If you resize the *whole* ruler (bar + ticks + label) proportionally, everything
    - **Linux**: `~/.config/inkscape/extensions/`
    - **macOS**: `~/Library/Application Support/org.inkscape.Inkscape/config/inkscape/extensions/`
    - **Windows**: `%APPDATA%\inkscape\extensions\`
-3. Restart Inkscape. The extension will appear under **Extensions → Generate from Path → Semantic Floorplan to OpenSCAD**, with two helper extensions under **Extensions → Floorplan**: **Add Semantic Layer** and **Add Scale Ruler**.
+3. Restart Inkscape. The extension will appear under **Extensions → Floorplan → Semantic Floorplan to OpenSCAD**, alongside two helper extensions: **Add Semantic Layer** and **Add Scale Ruler**.
 
 ### Installing the starter template (optional)
 
@@ -92,8 +93,8 @@ Restart Inkscape; the template then appears under **File → New From Template**
 2. Group or layer your shapes and label the layers using one of the prefixes above (e.g., a layer named `wall_outer_ground`). Instead of typing a prefix by hand, you can run **Extensions → Floorplan → Add Semantic Layer**, pick a category from the dropdown, and give it a name suffix — it creates the correctly-prefixed layer for you (as a top-level layer or a sublayer of the active layer). Starting from the starter template (see above) skips this step entirely for the common categories.
 3. Not sure if your drawing is the right real-world size? Run **Extensions → Floorplan → Add Scale Ruler** to drop a resizable "1 m" (or 10cm/50cm/2m/5m) reference bar into a corner of the canvas. Drag it to match a known distance in your drawing — see [Scale Ruler & Calibration](#scale-ruler--calibration) above — and the conversion will use it to calibrate the model's scale. It's excluded from the `.scad` output either way.
 4. Convert all shapes to paths: **Path → Object to Path** (Ctrl+Shift+C).
-5. Run the extension: Go to **Extensions → Generate from Path → Semantic Floorplan to OpenSCAD**.
-6. Select your output `.scad` filename and base scale, then click **Apply**.
+5. Run the extension: Go to **Extensions → Floorplan → Semantic Floorplan to OpenSCAD**.
+6. Select your output `.scad` filename and base scale, then click **Apply**. Check **Export a separate .scad file per category** if you want one `.scad` file per semantic category (e.g. for importing walls, doors, and windows separately into FreeCAD or another CAD/BIM tool) instead of a single combined file.
 7. Open the generated file in **OpenSCAD** to customize, preview, and export your 3D architectural model.
 
 ---

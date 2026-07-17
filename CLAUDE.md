@@ -30,7 +30,7 @@ Pre-commit hooks (`.pre-commit-config.yaml`) run ruff lint/format, INX well-form
 
 The extension is two files:
 
-- **`floorplan2openscad.inx`** — Inkscape extension descriptor XML. Declares the UI parameters (`fname`, `base_scale`, `smoothness`) and registers the script under *Extensions → Generate from Path → Semantic Floorplan to OpenSCAD*.
+- **`floorplan2openscad.inx`** — Inkscape extension descriptor XML. Declares the UI parameters (`fname`, `split_by_category`, `base_scale`, `smoothness`) and registers the script under *Extensions → Floorplan → Semantic Floorplan to OpenSCAD*.
 - **`floorplan2openscad.py`** — All logic lives here in `FloorplanToOpenSCAD(inkex.EffectExtension)`.
 
 ### Pipeline inside `effect()`
@@ -43,10 +43,12 @@ The extension is two files:
 
 4. **Category matching** (`get_category_for_node`) — checks the node's `id` and `inkscape:label` attributes (and then walks up to parent groups/layers) against the `CATEGORIES` dict prefix table. Unmatched objects fall back to the generic `wall` module and emit a warning.
 
-5. **OpenSCAD output** — writes a single `.scad` file in three sections:
+5. **OpenSCAD output** (`openscad_writer.write_scad`) — writes a `.scad` file in three sections:
    - Global parametric variables (`WALL_HEIGHT`, `DOOR_HEIGHT`, `WINDOW_SILL`, etc.) expressed as ratios of `BASE_Z_SCALE=1` so the user can tweak one number.
-   - Inline module definitions for all semantic types (wall, wall_outer, wall_inner, wall_balcony, floor_slab, door_wood, door_glass, sliding_glass_door, window_standard, wardrobe).
+   - Module definitions for all semantic types (wall, wall_outer, wall_inner, wall_balcony, floor_slab, door_wood, door_glass, sliding_glass_door, window_standard, wardrobe), sourced from the `_MODULE_DEFINITIONS` dict.
    - Coordinate arrays and `union() { apply_svg_scale() { ... } }` call block.
+
+   By default this is a single combined file. If the `split_by_category` option is enabled, `effect()` instead groups `items` by `module_name` and calls `write_scad` once per category, passing `module_names={category}` so each file's module-definitions section is trimmed to just that category (via `openscad_writer._modules_text`) — useful for importing categories separately into tools (e.g. FreeCAD) that otherwise treat a `.scad` file's `union()` as one opaque object. Per-category filenames are `{NAME}_{category}.scad`, computed by the pure helpers in `output_paths.py` (`resolve_output_path`, `category_output_path`) — kept inkex-free, like `layer_naming.py` and `ruler.py`, so they're unit-testable without Inkscape installed.
 
 ### Semantic categories
 

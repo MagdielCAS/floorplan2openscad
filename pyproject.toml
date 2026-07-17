@@ -46,6 +46,7 @@ source = [
     "floorplan_add_layer",
     "ruler",
     "floorplan_add_ruler",
+    "output_paths",
 ]
 omit = ["tests/*"]
 

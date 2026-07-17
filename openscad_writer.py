@@ -29,9 +29,8 @@ module apply_svg_scale() {{
 
 """
 
-_MODULES = """\
-/* --- Semantic Modules --- */
-
+_MODULE_DEFINITIONS = {
+    "wall": """\
 module wall(points, paths=[], h=WALL_HEIGHT) {
     color([0.9, 0.9, 0.92])
     linear_extrude(height=h, convexity=10) {
@@ -39,6 +38,8 @@ module wall(points, paths=[], h=WALL_HEIGHT) {
     }
 }
 
+""",
+    "wall_outer": """\
 module wall_outer(points, paths=[], h=WALL_HEIGHT) {
     color([0.9, 0.9, 0.92])
     linear_extrude(height=h, convexity=10) {
@@ -46,6 +47,8 @@ module wall_outer(points, paths=[], h=WALL_HEIGHT) {
     }
 }
 
+""",
+    "wall_inner": """\
 module wall_inner(points, paths=[], h=WALL_HEIGHT) {
     color([0.9, 0.9, 0.92])
     linear_extrude(height=h, convexity=10) {
@@ -53,6 +56,8 @@ module wall_inner(points, paths=[], h=WALL_HEIGHT) {
     }
 }
 
+""",
+    "wall_balcony": """\
 module wall_balcony(points, paths=[], h=BALCONY_HEIGHT) {
     color([0.9, 0.9, 0.92])
     linear_extrude(height=h, convexity=10) {
@@ -60,6 +65,8 @@ module wall_balcony(points, paths=[], h=BALCONY_HEIGHT) {
     }
 }
 
+""",
+    "floor_slab": """\
 module floor_slab(points, paths=[], h=FLOOR_THICKNESS) {
     if (RENDER_FLOORS) {
         color([0.85, 0.8, 0.75])
@@ -70,6 +77,8 @@ module floor_slab(points, paths=[], h=FLOOR_THICKNESS) {
     }
 }
 
+""",
+    "door_wood": """\
 module door_wood(points, paths=[]) {
     color([0.9, 0.9, 0.92])
     translate([0, 0, DOOR_HEIGHT])
@@ -84,6 +93,8 @@ module door_wood(points, paths=[]) {
     }
 }
 
+""",
+    "door_glass": """\
 module door_glass(points, paths=[]) {
     color([0.9, 0.9, 0.92])
     translate([0, 0, DOOR_HEIGHT])
@@ -109,6 +120,8 @@ module door_glass(points, paths=[]) {
     }
 }
 
+""",
+    "sliding_glass_door": """\
 module sliding_glass_door(points, paths=[]) {
     color([0.9, 0.9, 0.92])
     translate([0, 0, DOOR_HEIGHT])
@@ -134,6 +147,8 @@ module sliding_glass_door(points, paths=[]) {
     }
 }
 
+""",
+    "window_standard": """\
 module window_standard(points, paths=[]) {
     color([0.9, 0.9, 0.92])
     linear_extrude(height=WINDOW_SILL, convexity=10) {
@@ -165,6 +180,8 @@ module window_standard(points, paths=[]) {
     }
 }
 
+""",
+    "wardrobe": """\
 module wardrobe(points, paths=[]) {
     if (RENDER_FURNITURE) {
         color("wheat")
@@ -174,7 +191,18 @@ module wardrobe(points, paths=[]) {
     }
 }
 
-"""
+""",
+}
+
+
+def _modules_text(module_names=None):
+    """Concatenate '/* --- Semantic Modules --- */' header + selected module definitions.
+
+    module_names=None (default) includes all modules, in their fixed
+    declaration order, matching the historical single-file output exactly.
+    """
+    names = _MODULE_DEFINITIONS.keys() if module_names is None else [name for name in _MODULE_DEFINITIONS if name in module_names]
+    return "/* --- Semantic Modules --- */\n\n" + "".join(_MODULE_DEFINITIONS[name] for name in names)
 
 
 def build_items(paths_with_modules, cx, cy):
@@ -241,8 +269,13 @@ def build_items(paths_with_modules, cx, cy):
     return items
 
 
-def write_scad(f, basename, items, scale_config):
-    """Write a complete .scad file to the open file object f."""
+def write_scad(f, basename, items, scale_config, module_names=None):
+    """Write a complete .scad file to the open file object f.
+
+    module_names restricts which module definitions are emitted (default:
+    all of them). Used to produce one file per category that only carries
+    the module(s) it actually needs.
+    """
     f.write(
         _PARAMETERS_TEMPLATE.format(
             basename=basename,
@@ -250,7 +283,7 @@ def write_scad(f, basename, items, scale_config):
             **scale_config,
         )
     )
-    f.write(_MODULES)
+    f.write(_modules_text(module_names))
     f.write("/* --- Data Extraction & Coordinates --- */\n\n")
     for item in items:
         f.write(f"{item['var_name']}_points = {format_points(item['points'])};\n")

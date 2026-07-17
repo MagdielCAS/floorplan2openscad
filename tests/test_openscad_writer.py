@@ -97,7 +97,6 @@ def test_write_scad_contains_all_global_vars():
         "WINDOW_SILL",
         "FLOOR_THICKNESS",
         "BALCONY_HEIGHT",
-        "FRAME_WIDTH",
         "SCALE_FACTOR",
     ):
         assert var in output, f"Missing global variable: {var}"

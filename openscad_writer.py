@@ -9,13 +9,12 @@ _PARAMETERS_TEMPLATE = """\
 // Base Z-Scale: {desc}
 
 BASE_Z_SCALE = 1;
-WALL_HEIGHT      = {wall_height:.2f}/80 * BASE_Z_SCALE;  // Standard ceiling height (2.40m)
-DOOR_HEIGHT      = {door_height:.2f}/80 * BASE_Z_SCALE;  // Standard door clearance (2.00m)
-WINDOW_HEADER    = {window_header:.2f}/80 * BASE_Z_SCALE;  // Top of the window frame (2.10m)
-WINDOW_SILL      = {window_sill:.2f}/80 * BASE_Z_SCALE;  // Standard window sill height (0.90m)
-FLOOR_THICKNESS  = {floor_thickness:.2f}/80 * BASE_Z_SCALE;  // Slab thickness below Z=0 (0.15m)
-BALCONY_HEIGHT   = {balcony_height:.2f}/80 * BASE_Z_SCALE;  // Height for balcony/varanda walls (1.10m)
-FRAME_WIDTH      = {frame_width:.2f}/80 * BASE_Z_SCALE;  // Width of door and window frames
+WALL_HEIGHT      = {wall_height:.2f} * BASE_Z_SCALE;  // Standard ceiling height (2.40m)
+DOOR_HEIGHT      = {door_height:.2f} * BASE_Z_SCALE;  // Standard door clearance (2.00m)
+WINDOW_HEADER    = {window_header:.2f} * BASE_Z_SCALE;  // Top of the window frame (2.10m)
+WINDOW_SILL      = {window_sill:.2f} * BASE_Z_SCALE;  // Standard window sill height (0.90m)
+FLOOR_THICKNESS  = {floor_thickness:.2f} * BASE_Z_SCALE;  // Slab thickness below Z=0 (0.15m)
+BALCONY_HEIGHT   = {balcony_height:.2f} * BASE_Z_SCALE;  // Height for balcony/varanda walls (1.10m)
 
 RENDER_DOORS     = true;
 RENDER_WINDOWS   = true;
@@ -102,20 +101,9 @@ module door_glass(points, paths=[]) {
         if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
     }
     if (RENDER_DOORS) {
-        color([0.4, 0.25, 0.1])
-        linear_extrude(height=DOOR_HEIGHT, convexity=10) {
-            difference() {
-                if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
-                offset(delta = -FRAME_WIDTH) {
-                    if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
-                }
-            }
-        }
         color([0.5, 0.8, 1.0, 0.3])
         linear_extrude(height=DOOR_HEIGHT, convexity=10) {
-            offset(delta = -FRAME_WIDTH) {
-                if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
-            }
+            if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
         }
     }
 }
@@ -129,20 +117,9 @@ module sliding_glass_door(points, paths=[]) {
         if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
     }
     if (RENDER_DOORS) {
-        color([0.9, 0.9, 0.92])
-        linear_extrude(height=DOOR_HEIGHT, convexity=10) {
-            difference() {
-                if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
-                offset(delta = -FRAME_WIDTH / 2.0) {
-                    if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
-                }
-            }
-        }
         color([0.5, 0.8, 1.0, 0.3])
         linear_extrude(height=DOOR_HEIGHT, convexity=10) {
-            offset(delta = -FRAME_WIDTH / 2.0) {
-                if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
-            }
+            if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
         }
     }
 }
@@ -160,22 +137,10 @@ module window_standard(points, paths=[]) {
         if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
     }
     if (RENDER_WINDOWS) {
-        color([0.75, 0.78, 0.80])
-        translate([0, 0, WINDOW_SILL])
-        linear_extrude(height=WINDOW_HEADER - WINDOW_SILL, convexity=10) {
-            difference() {
-                if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
-                offset(delta = -FRAME_WIDTH) {
-                    if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
-                }
-            }
-        }
         color([0.5, 0.8, 1.0, 0.3])
         translate([0, 0, WINDOW_SILL])
         linear_extrude(height=WINDOW_HEADER - WINDOW_SILL, convexity=10) {
-            offset(delta = -FRAME_WIDTH) {
-                if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
-            }
+            if (len(paths) > 0) { polygon(points, paths); } else { polygon(points); }
         }
     }
 }

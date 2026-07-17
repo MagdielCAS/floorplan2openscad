@@ -45,7 +45,6 @@ _REQUIRED_KEYS = {
     "window_sill",
     "floor_thickness",
     "balcony_height",
-    "frame_width",
     "mm_per_unit",
     "scale_factor",
 }

@@ -90,9 +90,7 @@ The generated `.scad` files use a small, fixed set of OpenSCAD primitives. Refer
 
 **`linear_extrude(height, convexity)`** — lifts a 2D polygon into a 3D solid along Z. Every architectural element is an extruded polygon; there is no mesh geometry.
 
-**`offset(delta)`** — shrinks or expands a 2D polygon. Used inside `door_glass`, `door_wood` (sliding), and `window_standard` modules to carve out the interior of a frame: the outer polygon minus an `offset(delta=-FRAME_WIDTH)` inner polygon produces the frame ring via `difference()`.
-
-**`translate([x,y,z])`** — used to stack sub-elements vertically. Window sill walls sit at Z=0, the frame and glass span `[WINDOW_SILL, WINDOW_HEADER]`, and the lintel wall sits above `WINDOW_HEADER`. Door lintels use `translate([0,0,DOOR_HEIGHT])`.
+**`translate([x,y,z])`** — used to stack sub-elements vertically. Window sill walls sit at Z=0, the glass pane spans `[WINDOW_SILL, WINDOW_HEADER]`, and the lintel wall sits above `WINDOW_HEADER`. Door lintels use `translate([0,0,DOOR_HEIGHT])`.
 
 **`scale([sx, -sy, 1])`** — the `apply_svg_scale()` wrapper flips the Y axis (SVG Y grows downward, OpenSCAD Y grows upward) and converts px units to the chosen real-world unit via `SCALE_FACTOR`.
 
